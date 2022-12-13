@@ -1,0 +1,193 @@
+=== FUTURE PLANS/CHANGES FOR MM_BOT ===
+
+- record ema datas and other indicators to database whenever buying or selling.
+- improve the scalping ability of mm_bot by using candlestick patterns, VWAP, and other data.
+- run mm_bot on cloud using github and heroku (free)
+- make mm_bot for other crypto coins.
+- simplify the functions and codes.
+
+
+=== UPDATES IN MM_BOT ===
+
+Changes in December 12-16, 2022:
+
+-
+-
+-
+-
+-
+
+Changes in December 5-9, 2022:
+
+- added the time module in the import to enable sleeping.
+- simplified the print_data() function by removing the if...else codes within it.
+- added the SMA and Standard Deviation under get_bars() function. The purpose of these codes is to determine the
+  maximum price allowed that the bot can buy based on the Standard Deviation of the prices.
+- removed the RSI under get_bars() function because it currently serves no purpose in our bot.
+- added the Linear Regression Angle under get_bars() function. The purpose of this code is to determine whether
+  the market is bullish, bearish, or sideways based on the angle of the line regression.
+- added variables for mark price, ema_6[-1], ema_6[-2], and ema_3[-2] under order_buy() and order_sell() functions.
+  these variables will be used in store_placeholder_buy() and store_profit_history() for future debugging and/or
+  analyzation of buy/sell orders.
+- added the print_datetime() and time.sleep(5) under order_buy() and order_sell() functions. the purpose of these
+  is to prevent multiple buying/selling within a specific time and to ensure that the bot will only buy/sell
+  1 position at a time.
+- the get_signal() code under the buy_sell_logic() function is now changed into print_data()
+- added new if-condition under the buy_sell_logic() function that uses the Standard Deviation to determine the
+  maximum price allowed that the bot can buy, and Linear Regression Angle that tells the bot to stop buying if
+  the market is currently sideways.
+- added additional conditions under the buy_sell_logic() function using ema_3, ema_6, ema_13, and ema_21 to 
+  ensure that the bot buys/sells at the right timing.
+- included the print_datetime() at the bottom of the buy_sell_logic() function.
+- simplified the placeholder logic codes by using the for-loop code. 
+
+Changes in November 28 - December 2, 2022:
+
+- deleted the file "mmbot (old-sma).py"
+- renamed the variable QTY_PER_TRADE into QTY_TRADE.
+- removed the time.sleep code in order to adapt more quickly with the price changes for our scalping strategy.
+- removed the print("Sleep for 1 minute") and print("="*40, end="\n\n") codes under the get_pause() function.
+- removed the time module from import.
+- removed the parameter asset in the get_wallet_balance() function.
+- removed the parameter symbol in the get_position() function.
+- removed the parameter symbol in the get_bars() function.
+- removed the parameter Symbol in the get_last_price() function.
+- removed the parameter Symbol in the get_mark_price() function.
+- renamed get_signal() function into print_data() function.
+- removed the fast and slow parameter in print_data function and added the id parameter.
+- changed ema_5 into ema_6, and also changed ema_80 into ema_35.
+- simplified the codes under print_data() function in order to display only the last price, mark price, 
+  placeholder, position, ema_3, ema_6, and RSI into the display.
+- added the id parameter in the order_buy function.
+- removed the buy fee and Quantity variable in the order_buy() and order_sell() function because we will be 
+  setting the buy/sell quantity to be equal directly to QTY_TRADE variable to be more precise and no decimals.
+- removed the get_quantity_precision() function since it is no longer needed in order_buy() and order_sell()
+- recoded the calculation for profit which is now based on the wallet balances.
+- since the bot now runs about every 1 second, I've simplified the output display by adding ,end="" codes at 
+  end of print() codes in order to save space/lines on the display.
+- created a new function called buy_sell_logic() where it will contain the entire if...else codings for our buy 
+  and sell logic of mm_bot.
+- removed the RSI conditions in the buy_sell_logic().
+- added new conditions in the buy_sell_logic() that determines if we are in the buying/selling range.
+- added new conditions in the buy_sell_logic() that determines when exactly to initiate the buy/sell order.
+- added the parameters place, id, and num in the buy_sell_logic() function.
+- added the print_data() function under the buy_sell_logic() function.
+- added id numbers such as [1], [2], [3], abd [4] at the end of print() codes in buy_sell_logic() to determine 
+  which print() is executed.
+- removed the place, should_buy, and print() under the while loop to simplify the codings.
+- added new conditions under while loop to enable the bot to have 5 place (placeholders) for the buy value:
+  If the mark price goes below the 1st place, then the bot uses the 2nd place to redo the buy & sell logic.
+  If the bot manages to sell from 2nd place or if the mark price goes higher than the 1st place, then the bot 
+  goes back to the 1st place. This logic applies to the 3rd, 4th, and 5th place. The purpose of these codes
+  is to enable the bot to continue the buy & sell logic even if the mark price goes down unexpectedly. It will 
+  temporarily hold the previous place and continue the buy & sell logic while waiting for the mark price to go
+  up again to sell back the previous place.
+- revised and added new comments in the code.
+
+Changes in November 21-25, 2022:
+
+- in mongodby.py, I have added a new code under the store_profit_history() function that lists the new profits
+  gained by id numbers (example: id: 1, id: 2, id: 3, etc.)
+- installed TA-lib module in python - Technical Analysis library for financial time series datasets (open, close, 
+  high, low, volume) We will use Talib to calculate the EMAs and RSI indicator for our bot.
+- created a copy of mm_bot called "mmbot (talib-ema).py" THIS IS NOW OUR CURRENT FILE and we will use this to 
+  import talib and code our buy & sell logic based on the EMA Crossover & RSI Indicator Strategy.
+- deleted the get_sma() function, sma_fast bar, and sma_slow bar as it is no longer needed in our strategy.
+- added the following new bars under get_bars() function: ema_3, ema_5, ema_13, ema_21, ema_80, and RSI.
+- changed the buy & sell logic of the mm_bot to follow the ema_3 and ema_5 crossover strategy.
+- removed the "should_buy == true" condition from the buy & sell logic as it is unnecessary.
+- removed the SMA_FAST and SMA_SLOW variables as it is no longer needed.
+- At this point, I have decided to change our Paper Trading Platform from Alpaca to Binance Futures (Mock Trading)
+  the following changes are the steps required to transition from Alpaca to Binance:
+- first, I made an account in Binance Futures and created an API key for our bot.
+- then, installed python-binance using pip (pip install python-binance)
+- removed alpaca_trade_api from import. Then I have added binance.client and pandas in the import.
+- inputted our binance futures api_key and and api_secret in config.py, then changed the client coding in mm_bot
+  in accordance with the binance.client module.
+- added new variables: ASSET = 'USDT' and TIMEFRAME = '1m'
+- updated the coding in get_position() function to connect to Binance Futures.
+- added new function called get_wallet_balance() that connects to Binance Futures.
+- added new function called get_quantity_precision() that gets the precision (number of decimals accepted) of an
+  asset (like USDT) when we buy or sell in Binance. 
+- updated the coding in get_signal() function to work properly with the data (bars) from Binance Futures.
+- updated and added new codes under get_bars() function to connect to Binance Futures and get the bars (klines)
+  of the symbol (ETHUSDT) that we are trading.
+- added new function called order_buy()  that connects to Binance Futures to place an order to Buy.
+- added new function called order_sell() that connects to Binance Futures to place an order to Sell.
+- added the wallet balance in our output display to see the increase/decrease in our wallet.
+- updated the codings in the if...else conditions to work properly with the data (bars) from Binance Futures.
+- updated and added new comments in the code.
+- added RSI indicator in buy/sell logic: If RSI < 33 then BUY, If RSI > 66 then Sell.
+- added new function called get_last_price(). This function gets the latest price of the symbol (ETHUSDT) in 
+  to be displayed in the output for "Current:"
+- added new function called get_mark_price(). This function gets the mark price of the symbol (ETHUSDT) in 
+  order to store it in the database as a placeholder, to calculate the profit, and to be used in buy/sell logic. 
+- replaced all "float(bars.close.iloc[-1])" in the code with "get_mark_price(SYMBOL)" so that instead of using
+  the latest close value, we will now be using the mark price to become more accurate.
+
+Changes in November 14-18, 2022: ~
+
+- added new "test1" file where I reverted some changes like removing the get_sell() function to fix bugs.
+- added "test for print()" file to see the values of variables like bars.sma_fast, bars.closed, bars, and others.
+- added "mongodb" file to test the connection to mongodb database
+- added functions to store and get placeholder value for buy (these functions are inside mongodb.py)
+- NOTE: The values stored in the placeholder in mongodb are based on the bot's Buy and Sell IN MY CRYPTO ACCOUNT.
+- added id numbers such as [1], [2], [3], etc. at the end of print() codes to determine which print() is executed.
+  (for coding purposes)
+- moved the "place" variable within the while() loop.
+- added new "test2" file to test whether a normal txt file would work as a database as opposed to mongodb.
+- renamed "test1" into "mmbot with mongodb"
+- renamed "test2" into "mmbot with txt database"
+- renamed "test" into "mmbot (old)" --- might as well delete this file sooner or later.
+- in "mmbot with txt database", added new functions: write_datab_buy(new_placeh) and read_datab_buy()
+- I've personally decided to pause the development of mm_bot with mongodb database because of the potential 
+  problem with users having different alpaca accounts. As an alternative, I've decided to use a normal txt 
+  file as a local database that works for users with different alpaca accounts. For this reason, our most 
+  current file for mm_bot as of date is "mmbot with txt database.py"
+- renamed "Changes.txt" file into "updates.txt"
+- added the "Future Plans/Changes for MM_Bot" section in the "updates.txt" file.
+- added/changed some comments in the code.
+- after our meeting, we have decided to continue the development of mm_bot with mongodb and pause the one with 
+  txt database. For this reason, our most current file for mm_bot as of date is "mmbot with mongodb.py"
+- deleted the old file "mmbot (old).py"
+- backed up the "database.txt" and "mongo with txt database.py" files and removed them from the current folder.
+- renamed "mmbot with mongodb.py" into "mmbot.py" because it is now our focus and most current file that uses
+  mongodb as the database.
+- simplified the if...else parts of the code for buying/selling by merging some conditions together and removing
+  the repetitive if...else parts in the code.
+- added the values of fast[-1] and fast[-2] on the output display for debugging purposes.
+- resetted the value of time.sleep() back to 60 seconds (1 minute) for debugging purposes.
+- added new if...else code in get_signal() function so that when in selling phase, the "fast" output on the 
+  display is now "current" value output (same as fast), and the "slow" output on the display is now "bought at" 
+  output. (same as the value of placeholder for buy)
+- moved the print() codes for fast[-1] and fast[-2] output display inside the get_signal() function.
+- since the if...else code of buying and selling is now simplified, I have removed the id numbers such as [1], 
+  [2], [3], etc. at the end of print() codes.
+- added the new store_profit_history() function in mongodb.py that records the date, time, and profit into 
+  the database every time mm_bot sells. I've also imported this function into mmbot.py under Selling Phase codes.
+- improved/edited some comments in the code.
+- simplified the import codes.
+- added new codes under the store_profit_history() function [in mongodb.py] that adds the new profit gained to the 
+  "total profit" variable in the database. 
+- currently researching about EMA and RSI indicator and planning how to apply it into the mm_bot codes.
+- added new comments for the functions in mongodb.py
+
+Changes in November 10-11, 2022: ~
+
+- added new codes in order to prevent loss/negative profits when selling.
+- the bot now compares the current fast value to the previous fast value (when it buys) to decide when to sell.
+- set the SMA_FAST value to 1 and SMA_SLOW value to 15 in order to become more recent with the stock values.
+- changed/simplified the get_pause() function; removed redundant codes.
+- time.sleep() function included within get_pause() function; set to constant value of 60 seconds.
+- added date & time in the output display for time reference.
+- added \n (new line characters) in the output display for readability.
+- changed print("*"*20) into print("="*40)
+- improved/reorganized some codes, lines, and comments for readability.
+- fixed some typographical errors in code.
+- added new codes that instructs the bot to wait for the lowest possible fast value before buying.
+- added interval (+5) for the highest amount of increase in value to be accepted when buying.
+- added new codes that instructs the bot to wait for the highest possible fast value before selling.
+- added interval (-5) for the least amount of decrease in value to be accepted when selling.
+- reorganized some codes, lines, and comments for readability.
+- deleted redundant py files such as def.py, new-test.py, and mm_bot.py
+- changed time pause to 30 seconds
