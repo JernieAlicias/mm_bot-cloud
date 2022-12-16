@@ -2,20 +2,56 @@
 
 - record ema datas and other indicators to database whenever buying or selling.
 - improve the scalping ability of mm_bot by using candlestick patterns, VWAP, and other data.
-- run mm_bot on cloud using github and heroku (free)
 - make mm_bot for other crypto coins.
 - simplify the functions and codes.
+- add new code that reruns the repl python file if there is an error in binance's side.
+- add new code to prevent false signals.
+- make store_wallet_balance in mongodb for more accurate profit calculation.
+- repurpose the 5 placeholders? or remove it?
 
 
 === UPDATES IN MM_BOT ===
 
 Changes in December 12-16, 2022:
 
--
--
--
--
--
+- removed time from import since it is no longer used.
+- added new function in mongodb.py called store_should_buy() which is used to store the boolean value 
+  of the should_buy variable if the bot can buy or not.
+- added new function in mongodb.py called get_should_buy() which is used to get the boolean value 
+  of the should_buy variable if the bot can buy or not.
+- added store_should_buy and get_should_buy functions in mmbot in the import.
+- changed the Timeframe of the bars from 1 minute to 15 minutes to further reduce "noises" in the chart and
+  improve the buy & sell signals.
+- in get_bars() function, I have changed ema_35 into ema_40 in order to be more precise and prevent false signals.
+- in get_bars() function, I have adjusted the length of SMA from 480 down to 100 because our timeframe is now 
+  15 minutes. SMA is now a crucial part of our new Buy and Sell logic.
+- removed the Standard Deviation (SD) from get_bars() as it is no longer used in our new Buy and Sell logic.
+- removed the time.sleep() in order_buy() and order_sell() functions.
+- added store_should_buy(False) in order_buy() function. Its purpose is to prevent multiple buying orders 
+  to be initiated at one time.
+- added new function called buy_condition(n) which contains the new condition to initiate the Buy order.
+- added new function called sell_condition(n) which contains the new condition to initiate the Sell order.
+- added new function called should_buy_condition(n) which contains a new condition if whether the 
+  bot can buy again or not.
+- revamped the Buy & Sell logic of mmbot by changing strategy from Scalping to Swing trading. Our new logic is now
+  primarily focused on SMA with length 100 accompanied by EMA 3,6,13,21,and 40 to generate Buy and Sell signals.
+  In short, our Buy signal as of the current version of the bot is: If sma100 > ema3 > ema6 > ema13 > ema21 > ema40, 
+  then we Buy, or if the price crosses the SMA-100 from below, then we Buy. Our Sell signal as of the current 
+  version of the bot is: If sma100 < ema3 < ema6 < ema13 < ema21 < ema40, and Cost < Price, then we can Sell,
+  or if the price crosses the SMA-100 from above, then we Sell. In this new logic, we are technically "ignoring" the
+  small trends and instead we are focusing on bigger trends to minimize the "noises", false signals, and to improve
+  our profits for each trade. The only con of this new logic is that it now takes a much more longer time (about half
+  a day) before the bot initiates a Buy or Sell order.
+- added new if condition under the while loop that sets the should_buy value to True if it is satisfied so that 
+  the bot can buy once again.
+- since we are now using a new Buy & Sell logic, I have also simplified the placeholder conditions to match with 
+  our new logic.
+- I have deployed our mmbot to Replit and found a way to make our script run 24/7 with the help of UpTimeRobot.com.
+  this way, our bot can now run all the time to initiate the Buy & Sell orders on its own. If there are changes in
+  our bot, I can simply copy paste it into Replit and rerun it to apply the changes.
+- In order for mmbot to run 24/7 at Replit with the help of UpTimeRobot.com, I have added new set of codes in mmbot 
+  script (which is only in Replit) called Flask which is used to turn mmbot into a "web application" to keep it alive.
+- added/revised new comments in mmbot.py and mongodb.py
 
 Changes in December 5-9, 2022:
 

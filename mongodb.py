@@ -1,4 +1,4 @@
-import pymongo, datetime
+import pymongo
 
 mongodb_user_url = "mongodb+srv://admin:1234@mycluster.dyybuan.mongodb.net/?retryWrites=true&w=majority"
 mongodb_client = pymongo.MongoClient(mongodb_user_url)
@@ -19,9 +19,11 @@ def data_inserter2():
     place = { "_id": "Buy", "Buy again" : True} 
     datab.insert_one(place) 
 
+# Used to store the boolean value if the bot can buy or not
 def store_should_buy(boolean):
     datab.update_one( {"_id":"Buy"}, {"$set":{ "Should Buy?" : boolean}})
 
+# Used to get the boolean value if the bot can buy or not
 def get_should_buy():
     x = datab.find_one({"_id":"Buy"})
     return x["Should Buy?"]
