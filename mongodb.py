@@ -19,23 +19,14 @@ def data_inserter2():
     place = { "_id": "Buy", "Buy again" : True} 
     datab.insert_one(place) 
 
-# Used to store the boolean value if the bot can buy or not
-def store_should_buy(boolean):
-    datab.update_one( {"_id":"Buy"}, {"$set":{ "Should Buy?" : boolean}})
-
-# Used to get the boolean value if the bot can buy or not
-def get_should_buy():
-    x = datab.find_one({"_id":"Buy"})
-    return x["Should Buy?"]
-
 # Used to store the date, time, and "bought at" value in the placeholder for buy
-def store_placeholder_buy(id, date, time, place, ema6_1, ema6_2, ema3_2):    
-    datab.update_one( {"_id":id}, {"$set":{ "date" : date, "time" : time, 
+def store_placeholder_buy(date, time, place, ema6_1, ema6_2, ema3_2):    
+    datab.update_one( {"_id":"place1"}, {"$set":{ "date" : date, "time" : time, 
     "bought at": place, "ema6[-1]": ema6_1, "ema6[-2]": ema6_2, "ema3[-2]": ema3_2}})
 
 # Used to get the "bought at" value in the placeholder for buy
-def get_placeholder_buy(id):
-    x = datab.find_one({"_id":id})
+def get_placeholder_buy():
+    x = datab.find_one({"_id":"place1"})
     return x["bought at"]
 
 # Used to record the date, time, and profit gained into the database then adding it to the total profit

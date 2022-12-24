@@ -7,7 +7,7 @@ print("\nSuccessfully logged in", end="\n\n")
 
 SYMBOL        = 'ETHUSDT'
 ASSET         = 'USDT'
-TIMEFRAME     = '15m'
+TIMEFRAME     = '5m'
 QTY_TRADE     =  1
 
 # Prints the current date and time at the end of the display
@@ -60,8 +60,9 @@ def get_bars():
     bars["ema_13"]  = talib.EMA(bars.close, 13)
     bars["ema_21"]  = talib.EMA(bars.close, 21)
     bars["ema_40"]  = talib.EMA(bars.close, 40)
-    bars["SMA"]     = talib.SMA(bars.close, 100)
-    bars["LNRANG"]  = talib.LINEARREG_ANGLE(bars.close, 15)
+    bars["SMA"]     = talib.SMA(bars.close, 300)
+    bars["SD"]      = talib.STDDEV(bars.close, 99, 1)
+    bars["LNRANG"]  = talib.LINEARREG_ANGLE(bars.SMA, 3)
     return bars
 
 # Function that initiates the Buy order in Binance Futures market
@@ -84,19 +85,19 @@ def order_sell():
     print(f'Symbol: {SYMBOL} / Side: SELL / Quantity: {QTY_TRADE} / Current Position: {get_position()}')
     print_datetime()
 
-# Function that contains the conditions to initiate the Buy order
+# Function that contains the condition to initiate the Buy order
 def buy_condition(n):
     return ((float(bars.SMA.iloc[n]) > float(bars.ema_3.iloc[n]) > float(bars.ema_6.iloc[n]) > 
              float(bars.ema_13.iloc[n]) > float(bars.ema_21.iloc[n]) > float(bars.ema_40.iloc[n])) or           
             (float(bars.SMA.iloc[-2]) > float(bars.close.iloc[-2]) and 
              float(bars.SMA.iloc[-1]) < get_mark_price()))
 
-# Function that contains the conditions to initiate the Sell order
+# Function that contains the condition to initiate the Sell order
 def sell_condition(place, n):
     return (((float(bars.SMA.iloc[n]) < float(bars.ema_3.iloc[n]) < float(bars.ema_6.iloc[n]) < float(bars.ema_13.iloc[n]) < 
               float(bars.ema_21.iloc[n]) < float(bars.ema_40.iloc[n])) and (get_mark_price() > place + 1.5)) or
              (float(bars.SMA.iloc[-2]) < float(bars.close.iloc[-2]) and float(bars.SMA.iloc[-1]) > 
-              get_mark_price() > place + 1.5) or (float(bars.close.iloc[n]) < place))
+              get_mark_price() > place + 1.5) or (get_mark_price() < place))
 
 # Function that contains the condition if whether the bot can buy again or not
 def should_buy_condition(n):
@@ -111,16 +112,16 @@ def buy_sell_logic(place, id, num):
         
         # If the following conditions are satisfied, then the bot initiates the Buy order
         if get_should_buy() == True and buy_condition(-1) and buy_condition(-2): order_buy(id)
-        else: print("You're in Selling phase, waiting to buy / ", end="")
+        else: pass
             
     else: # position = num*QTY_TRADE: # SELLING PHASE
         
         # If the following conditions are satisfied, then the bot initiates the Sell order
         if sell_condition(place, -1) and sell_condition(place, -2): order_sell() 
-        else: print("You're in Buying phase, waiting to sell / ", end="")
+        else: pass
 
     print_datetime()
-
+    print(bars)
 
 while True: # To loop the following codes as fast as possible (about 1-2 seconds)
     
@@ -129,7 +130,7 @@ while True: # To loop the following codes as fast as possible (about 1-2 seconds
     wallet_balance = get_wallet_balance()  
 
     # Once this condition is satisfied, the bot can buy once again by setting the should_buy value to True
-    if should_buy_condition(-1) and should_buy_condition(-2): store_should_buy(True)
+    if should_buy_condition(-1) and should_buy_condition(-2): pass
 
     # The following conditions are used to enable the bot to have 5 place (placeholders) for the buy value.
     # The purpose of these codes is to enable the bot to continue the buy & sell logic even if the mark price 

@@ -1,5 +1,10 @@
 === FUTURE PLANS/CHANGES FOR MM_BOT ===
 
+- Go back to timeframe 5mins for more candles
+- delete should_buy in mongodb and mmbot
+- recheck and confirm the buy & sell conditions to prevent false signals
+- create new signals using the difference of open and close values that changes the "gear" of the bot for buying and
+  selling logic.
 - record ema datas and other indicators to database whenever buying or selling.
 - improve the scalping ability of mm_bot by using candlestick patterns, VWAP, and other data.
 - make mm_bot for other crypto coins.
@@ -11,6 +16,21 @@
 
 
 === UPDATES IN MM_BOT ===
+
+Changes in December 19-23, 2022:
+
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
 
 Changes in December 12-16, 2022:
 
