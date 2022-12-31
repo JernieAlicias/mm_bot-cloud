@@ -1,13 +1,13 @@
-import datetime, config, talib, pandas
+import time, datetime, config, talib, pandas
 from binance.client import Client
-from mongodb import get_placeholder_buy, store_placeholder_buy, store_profit_history, store_should_buy, get_should_buy
+from mongodb import get_placeholder_buy, store_placeholder_buy, store_profit_history
 
 client = Client(config.api_key, config.api_secret, testnet=True)
 print("\nSuccessfully logged in", end="\n\n")
 
 SYMBOL        = 'ETHUSDT'
 ASSET         = 'USDT'
-TIMEFRAME     = '5m'
+TIMEFRAME     = '1m'
 QTY_TRADE     =  1
 
 # Prints the current date and time at the end of the display
@@ -42,12 +42,12 @@ def get_mark_price():
     return float(Client.futures_mark_price(self=client, symbol=SYMBOL)['markPrice'])
 
 # Function that prints the current price, mark price, position, and other data on the display
-def print_data(id):
-    print(f"Current: {get_last_price()}  /  Mark Price: {get_mark_price()}  /  {id}: {get_placeholder_buy(id)}  /  Position: {position}")
-    print(f"Ema_3: {bars.ema_3.iloc[-1]}  /  Ema_6: {bars.ema_6.iloc[-1]}  /  LNRANG: {bars.LNRANG.iloc[-1]}")
+def print_data():
+    print(f"Current: {get_last_price()}  /  Mark Price: {get_mark_price()}  /  Place: {get_placeholder_buy()}  /  Position: {position}")
+    print(f"Ema_B: {bars.ema_B.iloc[-1]}  /  Ema_C: {bars.ema_C.iloc[-1]}  /  LNRANG: {bars.LNRANG.iloc[-1]}")
     return 
 
-# Gets the bars/klines in 1 minute data timeframe from Binance Futures then add the EMAs and other indicators
+# Gets the bars/klines in 5 minutes data timeframe from Binance Futures then adds the indicators
 def get_bars():
     datenow = datetime.datetime.now() - datetime.timedelta(days=2) # Used to indicate the date start of the bars
     bars = client.futures_historical_klines(SYMBOL, interval=TIMEFRAME, 
@@ -55,29 +55,28 @@ def get_bars():
     bars = pandas.DataFrame(bars, columns=['time','open','high',
     'low','close','vol','closetime','qav','trades','tbb','tbq','Nan'])
     bars = bars.set_index(bars.columns[0])
-    bars["ema_3"]   = talib.EMA(bars.close, 3)
-    bars["ema_6"]   = talib.EMA(bars.close, 6)
-    bars["ema_13"]  = talib.EMA(bars.close, 13)
-    bars["ema_21"]  = talib.EMA(bars.close, 21)
-    bars["ema_40"]  = talib.EMA(bars.close, 40)
-    bars["SMA"]     = talib.SMA(bars.close, 300)
-    bars["SD"]      = talib.STDDEV(bars.close, 99, 1)
-    bars["LNRANG"]  = talib.LINEARREG_ANGLE(bars.SMA, 3)
+    bars["ema_A"]  = talib.EMA(bars.close, 15)
+    bars["ema_B"]  = talib.EMA(bars.close, 45)
+    bars["ema_C"]  = talib.EMA(bars.close, 90)
+    bars["ema_D"]  = talib.EMA(bars.close, 195)
+    bars["ema_E"]  = talib.EMA(bars.close, 315)
+    bars["ema_F"]  = talib.EMA(bars.close, 500)
+    bars["SMA"]    = talib.SMA(bars.close, 1500)
+    bars["LNRANG"] = talib.LINEARREG_ANGLE(bars.SMA, 3)
     return bars
 
 # Function that initiates the Buy order in Binance Futures market
-def order_buy(id): 
-    m, x, y, z = get_mark_price(), bars.ema_6.iloc[-1], bars.ema_6.iloc[-2], bars.ema_3.iloc[-2]
+def order_buy(): 
+    m, x, y, z = get_mark_price(), bars.ema_C.iloc[-1], bars.ema_C.iloc[-2], bars.ema_B.iloc[-2]
     client.futures_create_order(symbol=SYMBOL, side='BUY', type='MARKET', quantity=QTY_TRADE)   
-    store_placeholder_buy(id, datetime.datetime.now().strftime("%x"), datetime.datetime.now().strftime("%X"), m, x, y, z)      
+    store_placeholder_buy(datetime.datetime.now().strftime("%x"), datetime.datetime.now().strftime("%X"), m, x, y, z)      
     print("Buying at Mark Price: ", m)
     print(f'Symbol: {SYMBOL} / Side: BUY / Quantity: {QTY_TRADE} / Current Position: {get_position()}')
     print_datetime()
-    store_should_buy(False) # Set the should_buy value to False to prevent multiple buying orders in one time
 
 # Function that initiates the Sell order in Binance Futures market
 def order_sell():
-    m, x, y, z = get_mark_price(), bars.ema_6.iloc[-1], bars.ema_6.iloc[-2], bars.ema_3.iloc[-2]
+    m, x, y, z = get_mark_price(), bars.ema_C.iloc[-1], bars.ema_C.iloc[-2], bars.ema_B.iloc[-2]
     client.futures_create_order(symbol=SYMBOL, side='SELL', type='MARKET', quantity=QTY_TRADE)     
     profit = get_wallet_balance() - wallet_balance
     store_profit_history(profit, datetime.datetime.now().strftime("%x"), datetime.datetime.now().strftime("%X"), m, x, y, z) 
@@ -85,65 +84,24 @@ def order_sell():
     print(f'Symbol: {SYMBOL} / Side: SELL / Quantity: {QTY_TRADE} / Current Position: {get_position()}')
     print_datetime()
 
-# Function that contains the condition to initiate the Buy order
-def buy_condition(n):
-    return ((float(bars.SMA.iloc[n]) > float(bars.ema_3.iloc[n]) > float(bars.ema_6.iloc[n]) > 
-             float(bars.ema_13.iloc[n]) > float(bars.ema_21.iloc[n]) > float(bars.ema_40.iloc[n])) or           
-            (float(bars.SMA.iloc[-2]) > float(bars.close.iloc[-2]) and 
-             float(bars.SMA.iloc[-1]) < get_mark_price()))
-
-# Function that contains the condition to initiate the Sell order
-def sell_condition(place, n):
-    return (((float(bars.SMA.iloc[n]) < float(bars.ema_3.iloc[n]) < float(bars.ema_6.iloc[n]) < float(bars.ema_13.iloc[n]) < 
-              float(bars.ema_21.iloc[n]) < float(bars.ema_40.iloc[n])) and (get_mark_price() > place + 1.5)) or
-             (float(bars.SMA.iloc[-2]) < float(bars.close.iloc[-2]) and float(bars.SMA.iloc[-1]) > 
-              get_mark_price() > place + 1.5) or (get_mark_price() < place))
-
-# Function that contains the condition if whether the bot can buy again or not
-def should_buy_condition(n):
-    return (float(bars.SMA.iloc[n]) > float(bars.ema_40.iloc[n]) > float(bars.ema_21.iloc[n]) > 
-            float(bars.ema_13.iloc[n]) > float(bars.ema_6.iloc[n]) > float(bars.ema_3.iloc[n]))
-
 # Function for the buy and sell logic of mm_bot
-def buy_sell_logic(place, id, num):
-    print_data(id)
-
-    if position < num*QTY_TRADE: # BUYING PHASE
-        
-        # If the following conditions are satisfied, then the bot initiates the Buy order
-        if get_should_buy() == True and buy_condition(-1) and buy_condition(-2): order_buy(id)
-        else: pass
-            
-    else: # position = num*QTY_TRADE: # SELLING PHASE
-        
-        # If the following conditions are satisfied, then the bot initiates the Sell order
-        if sell_condition(place, -1) and sell_condition(place, -2): order_sell() 
-        else: pass
-
+def buy_sell_logic(place):
+    print_data()
     print_datetime()
-    print(bars)
 
-while True: # To loop the following codes as fast as possible (about 1-2 seconds)
-    
+# Function that contains the main codes/functions to run mm_bot 
+def run_mmbot():
+    global bars, position, wallet_balance
     bars = get_bars() 
     position = get_position()              
     wallet_balance = get_wallet_balance()  
+    buy_sell_logic(get_placeholder_buy())
 
-    # Once this condition is satisfied, the bot can buy once again by setting the should_buy value to True
-    if should_buy_condition(-1) and should_buy_condition(-2): pass
+    print(bars)
 
-    # The following conditions are used to enable the bot to have 5 place (placeholders) for the buy value.
-    # The purpose of these codes is to enable the bot to continue the buy & sell logic even if the mark price 
-    # goes down unexpectedly and wait for the price to go up again to sell the previous place.
-
-    if position == 0  and get_should_buy() == False: 
-       buy_sell_logic(get_placeholder_buy(id="place1"), id="place1", num=1)
-
-    for i in range(5):
-        if ((position ==    i *QTY_TRADE and get_should_buy() == True) or 
-            (position == (i+1)*QTY_TRADE and get_should_buy() == False)):
-             buy_sell_logic(get_placeholder_buy(id="place"+str(i+1)), id="place"+str(i+1), num=i+1)
-             break
-
-    if position == 5 *QTY_TRADE and get_should_buy() == True: 
-       buy_sell_logic(get_placeholder_buy(id="place5"), id="place5", num=5)
+while True: # Loops the run_mmbot() function and automatically reruns it if there is an exception
+    
+    try: run_mmbot()
+    except Exception as error: 
+         print(error)
+         continue

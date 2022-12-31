@@ -5,10 +5,11 @@ from mongodb import get_placeholder_buy, store_placeholder_buy, store_profit_his
 client = Client(config.api_key, config.api_secret, testnet=True)
 print("\nSuccessfully logged in", end="\n\n")
 
-SYMBOL        = 'ETHUSDT'
-ASSET         = 'USDT'
-TIMEFRAME     = '5m'
-QTY_TRADE     =  1
+SYMBOL    = 'ETHUSDT'
+ASSET     = 'USDT'
+TIMEFRAME = '1m'
+QTY_TRADE =  1
+T1        =  0.5    
 
 # Prints the current date and time at the end of the display
 def print_datetime():
@@ -44,7 +45,7 @@ def get_mark_price():
 # Function that prints the current price, mark price, position, and other data on the display
 def print_data():
     print(f"Current: {get_last_price()}  /  Mark Price: {get_mark_price()}  /  Place: {get_placeholder_buy()}  /  Position: {position}")
-    print(f"Ema_B: {bars.ema_B.iloc[-1]}  /  Ema_C: {bars.ema_C.iloc[-1]}  /  LNRANG: {bars.LNRANG.iloc[-1]}")
+    print(f"Ema_B: {bars.ema_B.iloc[-1]}  /  Ema_C: {bars.ema_C.iloc[-1]}  /  LNRANG: {bars.LNRANG.iloc[-1]}  /  Minor1: {bars.Minor1.iloc[-1]}")
     return 
 
 # Gets the bars/klines in 5 minutes data timeframe from Binance Futures then adds the indicators
@@ -56,13 +57,13 @@ def get_bars():
     'low','close','vol','closetime','qav','trades','tbb','tbq','Nan'])
     bars = bars.set_index(bars.columns[0])
     bars["ema_A"]  = talib.EMA(bars.close, 3)
-    bars["ema_B"]  = talib.EMA(bars.close, 9)
-    bars["ema_C"]  = talib.EMA(bars.close, 18)
-    bars["ema_D"]  = talib.EMA(bars.close, 39)
-    bars["ema_E"]  = talib.EMA(bars.close, 63)
-    bars["ema_F"]  = talib.EMA(bars.close, 100)
-    bars["SMA"]    = talib.SMA(bars.close, 300)
-    bars["LNRANG"] = talib.LINEARREG_ANGLE(bars.SMA, 3)
+    bars["ema_B"]  = talib.EMA(bars.close, 6)
+    bars["ema_C"]  = talib.EMA(bars.close, 80)
+    bars["ema_D"]  = talib.EMA(bars.close, 500)
+    bars["SMA"]    = talib.SMA(bars.close, 1500)
+    bars["LNRANG"] = talib.LINEARREG_ANGLE(bars.SMA, 4)
+    bars["Minor1"]  = talib.LINEARREG_ANGLE(bars.ema_C, 4)
+    bars["Minor2"]  = talib.LINEARREG_ANGLE(bars.ema_D, 4)
     return bars
 
 # Function that initiates the Buy order in Binance Futures market
@@ -93,105 +94,64 @@ def buy_sell_logic(place):
         # If the main trend starts to go bullish, then the bot buys immediately
         if float(bars.LNRANG.iloc[-1]) >= 1.5:
 
-            if float(bars.LNRANG.iloc[-3]) >= 1.5 and float(bars.LNRANG.iloc[-1]) >= 1.5: 
-               print("You're in Buying phase, waiting to buy [1] / ", end="")
+           pass
 
-            else: 
-                n = 0
-                for _ in  range(3):
-                      if (float(bars.LNRANG.iloc[-5]) < 1.5 and float(bars.LNRANG.iloc[-4]) <  1.5 and 
-                          float(bars.LNRANG.iloc[-3]) < 1.5 and float(bars.LNRANG.iloc[-1]) >= 1.5 and
-                          float(bars.ema_A.iloc[-1])  > float(bars.ema_B.iloc[-1])): n += 1
-                      time.sleep(3)
-                if n == 3: 
-                      order_buy()
-                      print("Order Buy # 1 - Sleeping for 5 minutes")  
-                      time.sleep(300)  
-                else: print("You're in Buying phase, waiting to buy [2] / ", end="")
+
+
 
         # If the main trend goes sideways, then the bot has the following buy condition:
         elif 1.5 > float(bars.LNRANG.iloc[-1]) > -1.5: 
             
-            # If ema_A crosses ema_B from below, then the bot buys immediately
-            if (float(bars.ema_A.iloc[-3]) <  float(bars.ema_B.iloc[-3]) < float(bars.ema_C.iloc[-3]) < 
-                float(bars.ema_D.iloc[-3]) <  float(bars.ema_E.iloc[-3]) < float(bars.ema_F.iloc[-3]) and 
-                float(bars.ema_A.iloc[-2]) >= float(bars.ema_B.iloc[-2])): 
-                order_buy()
-                print("Order Buy # 2")
+            # 
+            if (float(bars.Minor1.iloc[-1]) < -1.5 and 
+                float(bars.close.iloc[-1]) < float(bars.ema_C.iloc[-1]) < float(bars.ema_D.iloc[-1])):
+                 
+                if (float(bars.ema_A.iloc[-2]) <  float(bars.ema_B.iloc[-2]) and
+                    float(bars.ema_A.iloc[-1]) >= float(bars.ema_B.iloc[-1])): order_buy()
 
-            else: print("You're in Buying phase, waiting to buy [3] / ", end="")
+                else: print("You're in Buying phase, waiting to buy [2a] / ", end="")      
+
+            else: print("You're in Buying phase, waiting to buy [2b] / ", end="")
 
         # If the main trend starts to go bearish, the bot has the following buy conditions:
         elif float(bars.LNRANG.iloc[-1]) <= -1.5:
             
-            # If the latest close price crosses the SMA from below, then the bot buys immediately
-            if (float(bars.SMA.iloc[-3]) >  float(bars.close.iloc[-3]) and 
-                float(bars.SMA.iloc[-2]) <= float(bars.close.iloc[-2])): 
-                order_buy()
-                print("Order Buy # 3")
-            
-            # If ema_D crosses ema_E from below, then the bot buys immediately
-            elif (float(bars.ema_D.iloc[-3]) <  float(bars.ema_E.iloc[-3]) and
-                  float(bars.ema_D.iloc[-2]) >= float(bars.ema_E.iloc[-2])):
-                  order_buy()
-                  print("Order Buy # 4")
+               pass
 
-            else: print("You're in Buying phase, waiting to buy [4] / ", end="")
+
+        
 
     else: # position = QTY_TRADE: # SELLING PHASE
         
         # If the main trend starts to go bearish, then the bot sells immediately
         if float(bars.LNRANG.iloc[-1]) <= -1.5:
             
-            if float(bars.LNRANG.iloc[-3]) <= -1.5 and float(bars.LNRANG.iloc[-1]) <= -1.5: 
-               print("You're in Selling phase, waiting to sell [5] / ", end="")
+               pass
 
-            else: 
-                n = 0
-                for _ in  range(3):
-                      if (float(bars.LNRANG.iloc[-5]) > -1.5 and float(bars.LNRANG.iloc[-4]) >  -1.5 and 
-                          float(bars.LNRANG.iloc[-3]) > -1.5 and float(bars.LNRANG.iloc[-1]) <= -1.5 and
-                          float(bars.ema_A.iloc[-1])  < float(bars.ema_B.iloc[-1])): n += 1
-                      time.sleep(3)
-                if n == 3: 
-                      order_sell()
-                      print("Order Sell # 1")    
-                else: print("You're in Selling phase, waiting to sell [6] / ", end="")
+
+        
 
         # If the main trend goes sideways, then the bot has the following sell condition:
         elif 1.5 > float(bars.LNRANG.iloc[-1]) > -1.5: 
             
-            # If ema_A crosses ema_B from above, then the bot sells immediately
-            if (float(bars.ema_A.iloc[-3]) >  float(bars.ema_B.iloc[-3]) > float(bars.ema_C.iloc[-3]) > 
-                float(bars.ema_D.iloc[-3]) >  float(bars.ema_E.iloc[-3]) > float(bars.ema_F.iloc[-3]) and 
-                float(bars.ema_A.iloc[-2]) <= float(bars.ema_B.iloc[-2])): 
-                order_sell()
-                print("Order Sell # 2")
+            # 
+            if (float(bars.Minor1.iloc[-1]) > 1.5 and 
+                float(bars.close.iloc[-1]) > float(bars.ema_C.iloc[-1]) > float(bars.ema_D.iloc[-1])):
+                 
+                if (float(bars.ema_A.iloc[-2]) >  float(bars.ema_B.iloc[-2]) and
+                    float(bars.ema_A.iloc[-1]) <= float(bars.ema_B.iloc[-1])): order_sell()
 
-            else: print("You're in Selling phase, waiting to sell [7] / ", end="")
+                else: print("You're in Selling phase, waiting to sell [2a] / ", end="")      
+
+            else: print("You're in Selling phase, waiting to sell [2b] / ", end="")
 
         # If the main trend starts to go bullish, then the bot has the following sell conditions:
         elif float(bars.LNRANG.iloc[-1]) >= 1.5:
             
-            # If the latest mark price crosses the SMA from above, then the bot sells immediately
-            if   ((float(bars.SMA.iloc[-2])   <  float(bars.close.iloc[-2])  and 
-                   float(bars.SMA.iloc[-1])   >= get_mark_price() > place + 1.5)): 
-                   order_sell() 
-                   print("Order Sell # 3")
+               pass
 
-            # If ema_A crosses ema_B from above, then the bot sells immediately
-            elif ((float(bars.ema_A.iloc[-3]) >  float(bars.ema_B.iloc[-3]) and
-                   float(bars.ema_A.iloc[-2]) <= float(bars.ema_B.iloc[-2]) and 
-                   float(bars.close.iloc[-1]) >  place + 1.5)): 
-                   order_sell()  
-                   print("Order Sell # 4")
 
-            # If the price goes down below the placeholder value, then the bot sells immediately
-            elif  (float(bars.close.iloc[-2]) <  place - 1): 
-                   order_sell()    
-                   print("Order Sell # 5")     
-
-            else:  print("You're in Selling phase, waiting to sell [8] / ", end="")              
+                
 
     print_datetime()
 
