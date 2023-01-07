@@ -1,14 +1,15 @@
-import time, datetime, config, talib, pandas
+import datetime, config, talib, pandas
 from binance.client import Client
 from mongodb import get_placeholder_buy, store_placeholder_buy, store_profit_history
 
 client = Client(config.api_key, config.api_secret, testnet=True)
 print("\nSuccessfully logged in", end="\n\n")
 
-SYMBOL        = 'ETHUSDT'
-ASSET         = 'USDT'
-TIMEFRAME     = '1m'
-QTY_TRADE     =  1
+SYMBOL    = 'ETHUSDT'
+ASSET     = 'USDT'
+TIMEFRAME = '1m'
+QTY_TRADE =  1
+T1        =  0.5    
 
 # Prints the current date and time at the end of the display
 def print_datetime():
@@ -44,7 +45,7 @@ def get_mark_price():
 # Function that prints the current price, mark price, position, and other data on the display
 def print_data():
     print(f"Current: {get_last_price()}  /  Mark Price: {get_mark_price()}  /  Place: {get_placeholder_buy()}  /  Position: {position}")
-    print(f"Ema_B: {bars.ema_B.iloc[-1]}  /  Ema_C: {bars.ema_C.iloc[-1]}  /  LNRANG: {bars.LNRANG.iloc[-1]}")
+    print(f"Major: {bars.Major.iloc[-1]}  /  Minor1: {bars.Minor1.iloc[-1]}  /  Minor2: {bars.Minor2.iloc[-1]}")
     return 
 
 # Gets the bars/klines in 5 minutes data timeframe from Binance Futures then adds the indicators
@@ -55,14 +56,14 @@ def get_bars():
     bars = pandas.DataFrame(bars, columns=['time','open','high',
     'low','close','vol','closetime','qav','trades','tbb','tbq','Nan'])
     bars = bars.set_index(bars.columns[0])
-    bars["ema_A"]  = talib.EMA(bars.close, 15)
-    bars["ema_B"]  = talib.EMA(bars.close, 45)
-    bars["ema_C"]  = talib.EMA(bars.close, 90)
-    bars["ema_D"]  = talib.EMA(bars.close, 195)
-    bars["ema_E"]  = talib.EMA(bars.close, 315)
-    bars["ema_F"]  = talib.EMA(bars.close, 500)
+    bars["ema_A"]  = talib.EMA(bars.close, 3)
+    bars["ema_B"]  = talib.EMA(bars.close, 6)
+    bars["ema_C"]  = talib.EMA(bars.close, 80)
+    bars["ema_D"]  = talib.EMA(bars.close, 500)
     bars["SMA"]    = talib.SMA(bars.close, 1500)
-    bars["LNRANG"] = talib.LINEARREG_ANGLE(bars.SMA, 3)
+    bars["Major"]  = talib.LINEARREG_ANGLE(bars.SMA, 4)
+    bars["Minor1"] = talib.LINEARREG_ANGLE(bars.ema_C, 4)
+    bars["Minor2"] = talib.LINEARREG_ANGLE(bars.ema_D, 4)
     return bars
 
 # Function that initiates the Buy order in Binance Futures market
@@ -87,6 +88,80 @@ def order_sell():
 # Function for the buy and sell logic of mm_bot
 def buy_sell_logic(place):
     print_data()
+
+    if position < QTY_TRADE: # BUYING PHASE
+        
+        # If the main trend starts to go bullish, then the bot buys immediately
+        if float(bars.Major.iloc[-1]) >= 1.5:
+
+           pass
+
+
+
+
+        # If the main trend goes sideways, then the bot has the following buy condition:
+        elif 1.5 > float(bars.Major.iloc[-1]) > -1.5: 
+            
+            # 
+            if (-2 < float(bars.Minor1.iloc[-1]) <  -1.5  and  float(bars.Minor2.iloc[-1]) < -0.5 and
+                     float(bars.close.iloc[-1])  <  float(bars.ema_C.iloc[-1]) < float(bars.ema_D.iloc[-1])):
+                 
+                if  (float(bars.ema_A.iloc[-2])  <  float(bars.ema_B.iloc[-2]) and
+                     float(bars.ema_A.iloc[-1])  >= float(bars.ema_B.iloc[-1])): 
+                     pass
+
+                else: pass
+
+            elif (float(bars.Minor1.iloc[-2]) <= -2 and
+                  float(bars.close.iloc[-1])  <  float(bars.ema_C.iloc[-1]) < float(bars.ema_D.iloc[-1])):
+
+                if float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) >= 1: 
+                   pass
+                
+                else: pass
+
+            else: pass
+
+        # If the main trend starts to go bearish, the bot has the following buy conditions:
+        elif float(bars.Major.iloc[-1]) <= -1.5:
+            
+               pass
+
+
+        
+
+    else: # position = QTY_TRADE: # SELLING PHASE
+        
+        # If the main trend starts to go bearish, then the bot sells immediately
+        if float(bars.Major.iloc[-1]) <= -1.5:
+            
+               pass
+
+
+        
+
+        # If the main trend goes sideways, then the bot has the following sell condition:
+        elif 1.5 > float(bars.Major.iloc[-1]) > -1.5: 
+            
+            # 
+            if (float(bars.Minor1.iloc[-1]) > 1.5 and float(bars.Minor2.iloc[-1]) > 0.5 and
+                float(bars.close.iloc[-1]) > float(bars.ema_C.iloc[-1]) > float(bars.ema_D.iloc[-1])):
+                 
+                if (float(bars.ema_A.iloc[-2]) >  float(bars.ema_B.iloc[-2]) and
+                    float(bars.ema_A.iloc[-1]) <= float(bars.ema_B.iloc[-1])): pass
+
+                else: pass    
+
+            else: pass
+
+        # If the main trend starts to go bullish, then the bot has the following sell conditions:
+        elif float(bars.Major.iloc[-1]) >= 1.5:
+            
+               pass
+
+
+                
+
     print_datetime()
 
 # Function that contains the main codes/functions to run mm_bot 
@@ -97,7 +172,7 @@ def run_mmbot():
     wallet_balance = get_wallet_balance()  
     buy_sell_logic(get_placeholder_buy())
 
-    print(bars)
+    print(float(bars.close.iloc[-1]) > float(bars.ema_C.iloc[-1]) > float(bars.ema_D.iloc[-1]))
 
 while True: # Loops the run_mmbot() function and automatically reruns it if there is an exception
     
