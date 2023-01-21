@@ -1,36 +1,123 @@
 === FUTURE PLANS/CHANGES FOR MM_BOT ===
 
-- Go back to timeframe 5mins for more candles
-- delete should_buy in mongodb and mmbot
-- recheck and confirm the buy & sell conditions to prevent false signals
-- create new signals using the difference of open and close values that changes the "gear" of the bot for buying and
-  selling logic.
-- record ema datas and other indicators to database whenever buying or selling.
-- improve the scalping ability of mm_bot by using candlestick patterns, VWAP, and other data.
-- make mm_bot for other crypto coins.
+- Change Buy Signal #2
 - simplify the functions and codes.
-- add new code that reruns the repl python file if there is an error in binance's side.
-- add new code to prevent false signals.
-- make store_wallet_balance in mongodb for more accurate profit calculation.
-- repurpose the 5 placeholders? or remove it?
+- make a chart for datalive to go to excel for analyzation purposes.
 
 
 === UPDATES IN MM_BOT ===
 
-Changes in December 19-23, 2022:
+Summary of Changes in January 16-20, 2023:
 
--
--
--
--
--
--
--
--
--
--
--
--
+- added new function in mongodb called store_buyval_history() which records the date, time, buy value, buy id,
+  and other datas in the database for analyzation purposes. It also updates the placeholder for the buy value.
+- deleted the function store_placeholder_buy() in mongodb as its purpose is now included in store_buyval_history()
+- added sell id in store_profit_history() function in mongodb to be recorded in database for
+  analyzation purposes.
+- improved the buy conditions of Buy1B from (float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) >= 1) 
+  into (float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) >= math.log(-float(bars.Minor1.iloc[-1]),2)).
+  This makes the condition more adaptive based on how bearish the price was before spiking up.
+- Added an ID for each buy and sell signals for reference and to specify which sell signals can be used by
+  specific buy signals only. These IDs might be changed later on in the future.
+- Added new Buy signal under float(bars.Major.iloc[-1]) <= -1.5 with id: Buy-1B. This signal can be triggered
+  if the Major trend is bearish.
+- Added new Sell signal under -1.5 < float(bars.Major.iloc[-1]) < 1.5 with id: Sell3A. This signal can be 
+  triggered if the Major trend is sideways.
+- Added new Sell signals under float(bars.Major.iloc[-1]) <= -1.5 with ids: Sell-1Bi and Sell-1B. These signals
+  can only be triggered by Buy-1B if the Major trend is bearish.
+- The following are the updated Buy and Sell signals of mmbot as of January 21, 2023:
+
+The Buy signals under the (-1.5 < Major[-1] < 1.5) or "Sideways" section are the following:
+
+  1. If close[-1] < ema_C[-1] < ema_D[-1], then:
+      A. If -2 < Minor1[-1] < -1.5, then:
+          i.  If Minor1[-2] <= -2 and Minor1[-3] <= -2 and Minor[-1] - Minor1[-4] > 0 and Minor2[-2] <= -0.5, then Buy.
+          ii. If Ema_A[-3] < Ema_B[-3] and Ema_A[-1] >= Ema_B[-1] and Minor2[-1] < -0.5, then Buy.
+      B. If Minor1[-1] <= -2 and Minor1[-1] - Minor1[-2] >= logarithm(-Minor1[-1], base 2), then Buy.
+  2. If Minor[-1] - Minor1[-4] >= 3 and Minor1[-1] > -3 and close[-1] > open[-2] and -2 < Minor2[-2] < 1.75, then Buy.
+
+The Buy signals under the (Major[-1] < -1.5) or "Bearish" section are the following:
+
+  1. If close[-1] < ema_C[-1] < ema_D[-1], then:
+      A. If Minor1[-1] < -2 and Minor1[-1] - Minor1[-2] >= logarithm(-Minor1[-1], base 2), then Buy.
+
+The Sell signals under the (-1.5 < Major[-1] < 1.5) or "Sideways" section are the following:
+
+  1. If close[-1] > ema_C[-1] > ema_D[-1], then:
+      A. If 1.5 < Minor1[-1] < 2 and Ema_A[-3] > Ema_B[-3] and Ema_A[-1] <= Ema_B[-1] and Minor2[-1] > 0.5, then Sell.
+      B. If 2 <= Minor1[-1] and Minor1[-1] - Minor1[-3] <= -logarithm(Minor1[-1], base 2), then Sell.
+  2. If ema_C[-1] >= close[-1] > ema_D[-1], then:
+      A. If close[-2] >= ema_C[-2] and close[-3] >= ema_C[-3] and close[-1] >= Buy_value + 1, then Sell.
+  3. If ema_D[-1] >= close[-1] > ema_C[-1] or close[-1] >= ema_D[-1] > ema_C[-1], then:, then:
+      A. If 2 <= Minor1[-1] and Minor1[-1] - Minor1[-3] <= -logarithm(Minor1[-1], base 2), then Sell.
+
+The Sell signals under the (Major[-1] < -1.5) or "Bearish" section are the following:
+
+  1. If Minor1[-1] < -2 and close[-1] <= Buy_value and buyid == 'Buy-1B', then Sell.
+  2. If 2 <= Minor1[-1] and Minor1[-1] - Minor1[-3] <= -logarithm(Minor1[-1], base 2), then Sell.
+
+
+
+Summary of Changes in December 19 - January 13, 2023:
+
+- Removed the 5 placeholders for Buy.
+- Reset the timeframe of chart back to 1 minute.
+- deleted should_buy function in mongodb and mmbot as it is no longer needed.
+- added new codes (using Flask) that reruns the repl python file if there is an error in binance's side.
+- added new functions: store_datab_walletbal and get_datab_walletbal in mongodb and mmbot that stores and gets our
+  wallet balance for more accurate profit calculation.
+
+- Changed the Buy and Sell logic of mmbot because there are some cases where profit is negative.
+  As of today, the bot has the following indicators: Ema_3, Ema_6, Ema_80, Ema_500, SMA_1500 (also named as Ema_A,
+  Ema_B, Ema_C, Ema_D, and SMA respectively). We also have other indicators such as the Linear Regression Angle 
+  of Ema_80 (named as Minor1), Linear Regression Angle of Ema_500 (named as Minor2), and the Linear Regression Angle 
+  of SMA_1500 (named as Major) to generate our buy and sell signals for mmbot.
+
+  The Buy and Sell signals of mmbot are divided into three sections: 
+  1.5 <= Major[-1],    -1.5 < Major[-1] < 1.5,    and Major[-1] <= -1.5
+
+  (For context, [-1] means the latest value, [-2] means the second to the last value, [-3] means the third to the
+  last value, and [-4] means the fourth to the last value, and etc.)
+
+  If the value of Major[-1] is greater than or equal to 1.5, this means that the overall trend is Bullish in the past
+  1500 candles. If the value of Major[-1] is in between -1.5 and 1.5, this means that the overall trend is about 
+  sideways in the past 1500 candles. And if the value of Major[-1] is less than or equal to -1.5, the overall trend 
+  is Bearish in the past 1500 candles.
+
+  Aside from Major, we also have Minor1 and Minor2. The value of Minor2 defines the trend in the past 500 candles 
+  while Minor1 defines the trend in the past 80 candles. If their value is positive, it means the trend is bullish.
+  If their value is negative, it means the trend is bearish. And if their value is near zero, then the trend is about
+  sideways in those past candles.
+ 
+  As of today, mmbot only has buy and sell signals under the (-1.5 < Major[-1] < 1.5) section. We are still currently
+  testing, adding, and improving the signals in this section to maximize the profit and prevent negative profits as 
+  much as possible in the future. Soon, we will also be adding and testing new buy and sell signals under the 
+  (1.5 <= Major[-1]) and (Major[-1] <= -1.5) sections. 
+
+  The Buy signals under the (-1.5 < Major[-1] < 1.5) or "Sideways" section are the following:
+
+  1. If close[-1] < ema_C[-1] < ema_D[-1], then:
+      A. If -2 < Minor1[-1] < -1.5, then:
+          i.  If Minor1[-2] <= -2 and Minor1[-3] <= -2 and Minor[-1] - Minor1[-4] > 0 and Minor2[-2] <= -0.5, then Buy.
+          ii. If Ema_A[-3] < Ema_B[-3] and Ema_A[-1] >= Ema_B[-1] and Minor2[-1] < -0.5, then Buy.
+      B. If Minor1[-1] <= -2 and Minor1[-1] - Minor1[-2] >= logarithm(-Minor1[-1], base 2), then Buy.
+  2. If Minor[-1] - Minor1[-4] >= 3 and Minor1[-1] > -3 and close[-1] > open[-2] and -2 < Minor2[-2] < 1.75, then Buy.
+
+  The Sell signals under the (-1.5 < Major[-1] < 1.5) or "Sideways" section are the following:
+
+  1. If close[-1] > ema_C[-1] > ema_D[-1], then:
+      A. If 1.5 < Minor1[-1] < 2 and Ema_A[-3] > Ema_B[-3] and Ema_A[-1] <= Ema_B[-1] and Minor2[-1] > 0.5, then Sell.
+      B. If 2 <= Minor1[-1] and Minor1[-1] - Minor1[-3] <= -logarithm(Minor1[-1], base 2), then Sell.
+  2. If ema_C[-1] >= close[-1] > ema_D[-1], then:
+      A. If close[-2] >= ema_C[-2] and close[-3] >= ema_C[-3] and close[-1] >= Buy_value + 1, then Sell.
+
+- Negative Profit occured on 2023-01-10 16:39:16. To prevent this from reoccuring, we have changed a code in
+  Buy signal #2: from close[-1] > close[-2]   into close[-1] > open[-2].
+- Negative Profits occured between 2023-01-10 17:52:52 and 2023-01-11 03:52:25. As a result, we have temporarily
+  disabled Buy signal #2 to investigate the cause and fix it.
+- Updated Sell signal #1A and moved it into Sell signal #2A because of contradiction in its conditions.
+
+
 
 Changes in December 12-16, 2022:
 
