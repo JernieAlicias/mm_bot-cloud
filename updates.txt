@@ -3,9 +3,74 @@
 - Change Buy Signal #2
 - simplify the functions and codes.
 - make a chart for datalive to go to excel for analyzation purposes.
+- Add Buy and Sell signals in Major >= 1.5
+- Add new Sell signal which is exclusive only for Buy2?
+- Add new Sell signal which is exclusive only for Buy1Ai?
+- Revamp Buy-1B to reduce number of trades or commissions
+- use RSI to add new signals
 
 
 === UPDATES IN MM_BOT ===
+
+Summary of Changes in January 23-28, 2023:
+
+- In Buy2, changed a condition from (-2 < x['Minor2[-2]'] < 1.75) to (-2 < x['Minor2[-2]']) which resulted in
+  an increase in profit in backtesting but it also resulted in more trades (much more commission than before)
+- Added new Sell signal with id: Sell+1A
+- added Buy1Bi signal
+- added Sell1Bi signal
+- In Buy1Ai, removed the condition Minor2[-1] < -0.5 
+- revamped Buy1Ai by adding new conditions and moving it to the last of Buy signals.
+- revamped Buy2 signal
+- added Buy+2 signal
+- The following are the updated Buy and Sell signals of mmbot as of January 28, 2023:
+
+The Buy signals under the (1.5 < Major[-1]) or "Bullish" section are the following:
+
+  1. If Minor1[-2] - Minor1[-5] >= 3, then:
+      A. If Minor1[-2] > -3 and close[-1] > close[-2] and -2 < Minor2[-3] and Major[-2] < 1.5, then Buy+2.
+
+The Buy signals under the (-1.5 < Major[-1] < 1.5) or "Sideways" section are the following:
+
+  1. If close[-1] < ema_C[-1] < ema_D[-1], then:
+      A. If -2 < Minor1[-1] < -1.5, then:
+          i.  If Ema_A[-3] < Ema_B[-3] and Ema_A[-1] >= Ema_B[-1] and Minor2[-1] < -0.5, then Buy1Aii.
+      B. If Minor1[-1] <= -2 and Minor1[-1] - Minor1[-2] >= logarithm(-Minor1[-1], base 2), then Buy1B.
+  2. If ema_D[-1] < close[-1] < ema_C[-1], then:
+      A. If Minor1[-1] <= -2 and Minor1[-1] - Minor1[-2] >= logarithm(-Minor1[-1], base 2), then Buy1Bi.
+  3. If Minor1[-2] - Minor1[-5] >= 3 and Minor1[-2] > -3 and close[-1] > open[-2] and -2 < Minor2[-3]
+         and Minor1[-1] - Minor1[-2] > 1 and (Minor2[-1] > 0.5 or close[-1] < ema_D[-1]), then Buy2.
+  4. If Minor1[-6] <= -2 and Minor1[-7] <= -2 and Minor1[-5] - Minor1[-8] > 0 and Minor1[-1] > 0, then Buy1Ai.
+
+The Buy signals under the (Major[-1] < -1.5) or "Bearish" section are the following:
+
+  1. If close[-1] < ema_C[-1] < ema_D[-1], then:
+      A. If Minor1[-1] <= -2 and Minor1[-1] - Minor1[-2] >= logarithm(-Minor1[-1], base 2), then Buy-1B.
+
+
+The Sell signals under the (1.5 < Major[-1]) or "Bullish" section are the following:
+
+  1. If 10 <= Minor2[-1] and Minor1[-1] - Minor1[-2] <= 0, then Sell+1A
+
+The Sell signals under the (-1.5 < Major[-1] < 1.5) or "Sideways" section are the following:
+
+  1. If buyid == 'Buy1Bi' and close[-1] <= open[-3], then Sell1Bi.
+  2. If close[-1] > ema_C[-1] > ema_D[-1], then:
+      A. If 1.5 < Minor1[-1] < 2 and Ema_A[-3] > Ema_B[-3] and Ema_A[-1] <= Ema_B[-1] and Minor2[-1] > 0.5, then Sell1A.
+      B. If 2 <= Minor1[-1] and Minor1[-1] - Minor1[-3] <= -logarithm(Minor1[-1], base 2), then Sell1B.
+  3. If ema_C[-1] >= close[-1] > ema_D[-1], then:
+      A. If close[-2] >= ema_C[-2] and close[-3] >= ema_C[-3] and close[-1] >= Buy_value + 1, then Sell2A.
+  4. If ema_D[-1] >= close[-1] > ema_C[-1] or close[-1] >= ema_D[-1] > ema_C[-1], then:
+      A. If 2 <= Minor1[-1] and Minor1[-1] - Minor1[-3] <= -logarithm(Minor1[-1], base 2), then Sell3A.
+
+The Sell signals under the (Major[-1] < -1.5) or "Bearish" section are the following:
+
+  1. If Minor1[-1] < -2 and close[-1] <= Buy_value and buyid == 'Buy-1B', then Sell-1Bi.
+  2. If 2 <= Minor1[-1] and Minor1[-1] - Minor1[-3] <= -logarithm(Minor1[-1], base 2) 
+        and buyid == 'Buy-1B', then Sell-1B.
+
+
+
 
 Summary of Changes in January 16-20, 2023:
 

@@ -29,13 +29,7 @@ def BuySellLogic(x):
 
                 if -2 < x['Minor1'] < -1.5:
 
-                    if (x['Minor1[-2]'] <= -2 and x['Minor1[-3]'] <= -2 and  
-                        x['Minor1'] - x['Minor1[-4]'] > 0 and x['Minor1[-2]'] <= -0.5):
-                        position = 1
-                        buyvalue = float(x['close'])
-                        return 'Buy1Ai'
-
-                    elif (x['ema_A[-3]'] < x['ema_B[-3]'] and x['ema_A'] >= x['ema_B'] and  
+                    if (x['ema_A[-3]'] < x['ema_B[-3]'] and x['ema_A'] >= x['ema_B'] and  
                           x['Minor2'] < -0.5):
                           position = 1
                           buyvalue = float(x['close'])
@@ -54,15 +48,39 @@ def BuySellLogic(x):
 
                 else: return None
 
-            elif x['Minor1'] - x['Minor1[-4]'] >= 3:
+            elif x['ema_D'] < float(x['close']) < x['ema_C']:
 
-                if (x['Minor1'] > -3 and float(x['close']) > float(x['open[-2]']) and 
-                    -2 < x['Minor2[-2]'] < 1.75):
+                if x['Minor1'] <= -2:
+
+                    if x['Minor1'] - x['Minor1[-2]'] >= math.log(-x['Minor1'],2):
+                        position = 1
+                        buyvalue = float(x['close'])
+                        buyid = 'Buy1Bi'
+                        #Then sleep for 2 mins
+                        return 'Buy1Bi'
+
+                    else: return None
+
+                else: return None
+
+            elif x['Minor1[-2]'] - x['Minor1[-5]'] >= 3:
+
+                if (x['Minor1[-2]'] > -3 and float(x['close']) > float(x['open[-2]']) and 
+                    -2 < x['Minor2[-3]'] and x['Minor1'] - x['Minor1[-2]'] > 1 and 
+                    (x['Minor2'] > 0.5 or float(x['close']) < x['ema_D'])):
                     position = 1
                     buyvalue = float(x['close'])
+                    buyid = 'Buy2'
                     return 'Buy2'
 
                 else: return None
+
+            elif (x['Minor1[-6]'] <= -2 and x['Minor1[-7]'] <= -2 and  
+                  x['Minor1[-5]'] - x['Minor1[-8]'] > 0 and x['Minor1'] > 0):
+                    position = 1
+                    buyvalue = float(x['close'])
+                    buyid = 'Buy1Ai'
+                    return 'Buy1Ai'
             
             else: return None
 
@@ -82,6 +100,22 @@ def BuySellLogic(x):
 
                 else: return None
 
+        elif 1.5 <= x['Major']:
+
+            if x['Minor1[-2]'] - x['Minor1[-5]'] >= 3:
+
+                if (x['Minor1[-2]'] > -3 and float(x['close']) > float(x['close[-2]']) and 
+                    -2 < x['Minor2[-3]'] and x['Major[-2]'] < 1.5):
+
+                    position = 1
+                    buyvalue = float(x['close'])
+                    buyid = 'Buy+2'
+                    return 'Buy+2'
+
+                else: return None
+
+            else: return None
+
         else: return None
 
     else: # if position == 1:
@@ -90,9 +124,26 @@ def BuySellLogic(x):
             buyid = 'go to Buy-1Bi'
             return None
 
+        elif buyid == 'Buy1Bi':
+             buyid = 'go to Buy1Bi'
+             return None
+
         elif -1.5 < x['Major']  <  1.5:
 
-            if float(x['close']) > x['ema_C'] > x['ema_D']:
+            if float(x['close']) <= float(x['open[-3]']) and buyid == 'go to Buy1Bi':
+
+                position = 0
+                buyid = 'others'
+                return 'Sell1Bi'
+
+            elif (float(x['close[-2]']) > x['ema_C[-2]'] and float(x['close']) <= x['ema_C'] and 
+                  buyid == 'Buy2'):
+
+                position = 0
+                buyid = 'others'
+                return 'SellB2'                
+
+            elif float(x['close']) > x['ema_C'] > x['ema_D']:
 
                 if 1.5 < x['Minor1'] < 2:
 
@@ -133,8 +184,8 @@ def BuySellLogic(x):
                         buyid = 'others'
                         return 'Sell3A'
 
-                    else: return None
-
+                    else: return 
+                    
                 else: return None
 
             else: return None
@@ -161,7 +212,18 @@ def BuySellLogic(x):
 
                 else: return None
 
-        else: return None
+        elif 1.5 < x['Major']:
+
+                if 10 <= x['Minor2']:
+
+                    if x['Minor1'] - x['Minor1[-2]'] <= 0:
+                        position = 0
+                        buyid = 'others'
+                        return 'Sell+1A'
+
+                    else: return None
+
+                else: return None
 
 #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -175,14 +237,7 @@ def Profit(x):
 
                 if -2 < x['Minor1'] < -1.5:
 
-                    if (x['Minor1[-2]'] <= -2 and x['Minor1[-3]'] <= -2 and  
-                        x['Minor1'] - x['Minor1[-4]'] > 0 and x['Minor1[-2]'] <= -0.5):
-                        p1 = 1
-                        b1 = float(x['close'])
-                        # Buy1Ai
-                        return None
-
-                    elif (x['ema_A[-3]'] < x['ema_B[-3]'] and x['ema_A'] >= x['ema_B'] and  
+                    if (x['ema_A[-3]'] < x['ema_B[-3]'] and x['ema_A'] >= x['ema_B'] and  
                           x['Minor2'] < -0.5):
                           p1 = 1
                           b1 = float(x['close'])
@@ -203,16 +258,42 @@ def Profit(x):
 
                 else: return None
 
-            elif x['Minor1'] - x['Minor1[-4]'] >= 3:
+            elif x['ema_D'] < float(x['close']) < x['ema_C']:
 
-                if (x['Minor1'] > -3 and float(x['close']) > float(x['open[-2]']) and 
-                    -2 < x['Minor2[-2]'] < 1.75):
+                if x['Minor1'] <= -2:
+
+                    if x['Minor1'] - x['Minor1[-2]'] >= math.log(-x['Minor1'],2):
+                        p1 = 1
+                        b1 = float(x['close'])
+                        bi1 = 'Buy1Bi'
+                        #Buy1Bi
+                        #Then sleep for 2 mins
+                        return None
+
+                    else: return None
+
+                else: return None
+
+            elif x['Minor1[-2]'] - x['Minor1[-5]'] >= 3:
+
+                if (x['Minor1[-2]'] > -3 and float(x['close']) > float(x['open[-2]']) and 
+                    -2 < x['Minor2[-3]'] and x['Minor1'] - x['Minor1[-2]'] > 1 and 
+                    (x['Minor2'] > 0.5 or float(x['close']) < x['ema_D'])):
                     p1 = 1
                     b1 = float(x['close'])
+                    bi1 = 'Buy2'
                     #Buy2
                     return None
 
                 else: return None
+
+            elif (x['Minor1[-6]'] <= -2 and x['Minor1[-7]'] <= -2 and  
+                  x['Minor1[-5]'] - x['Minor1[-8]'] > 0 and x['Minor1'] > 0):
+                    p1 = 1
+                    b1 = float(x['close'])
+                    bi1 = 'Buy1Ai'
+                    #Buy1Ai
+                    return None
             
             else: return None
 
@@ -231,7 +312,24 @@ def Profit(x):
 
                     else: return None
 
-                else: return None        
+                else: return None      
+
+        elif 1.5 <= x['Major']:
+
+            if x['Minor1[-2]'] - x['Minor1[-5]'] >= 3:
+
+                if (x['Minor1[-2]'] > -3 and float(x['close']) > float(x['close[-2]']) and 
+                    -2 < x['Minor2[-3]'] and x['Major[-2]'] < 1.5):
+
+                    p1 = 1
+                    b1 = float(x['close'])
+                    bi1 = 'Buy+2'
+                    #Buy+2
+                    return None
+
+                else: return None
+
+            else: return None
 
         else: return None
 
@@ -241,9 +339,30 @@ def Profit(x):
             bi1 = 'go to Buy-1Bi'
             return None
 
+        elif bi1 == 'Buy1Bi':
+             bi1 = 'go to Buy1Bi'
+             return None
+
         elif -1.5 < x['Major']  <  1.5:
 
-            if float(x['close']) > x['ema_C'] > x['ema_D']:
+            if float(x['close']) <= float(x['open[-3]']) and bi1 == 'go to Buy1Bi':
+                    
+                p1 = 0
+                bi1 = 'others'
+                proft = float(x['close']) - b1
+                #Sell1Bi
+                return proft
+
+            elif (float(x['close[-2]']) > x['ema_C[-2]'] and float(x['close']) <= x['ema_C'] and 
+                  bi1 == 'Buy2'):
+
+                p1 = 0
+                bi1 = 'others'
+                proft = float(x['close']) - b1
+                #SellB2
+                return proft          
+
+            elif float(x['close']) > x['ema_C'] > x['ema_D']:
 
                 if 1.5 < x['Minor1'] < 2:
 
@@ -324,7 +443,20 @@ def Profit(x):
 
                 else: return None
 
-        else: return None
+        elif 1.5 < x['Major']:
+
+                if 10 <= x['Minor2']:
+
+                    if x['Minor1'] - x['Minor1[-2]'] <= 0:
+                        p1 = 0
+                        bi1 = 'others'
+                        proft = float(x['close']) - b1
+                        #Sell+1A
+                        return proft
+
+                    else: return None
+
+                else: return None
 
 
 def get_bars():
@@ -335,6 +467,7 @@ def get_bars():
     bars["close[-2]"]  = bars.close.shift()
     bars["close[-3]"]  = bars.close.shift(2)
     bars["open[-2]"]   = bars.open.shift()
+    bars["open[-3]"]   = bars.open.shift(2)
     bars["ema_A"]      = talib.EMA(bars.close, 3)
     bars["ema_A[-3]"]  = bars.ema_A.shift(2)
     bars["ema_B"]      = talib.EMA(bars.close, 6)
@@ -345,12 +478,18 @@ def get_bars():
     bars["ema_D"]      = talib.EMA(bars.close, 500)
     bars["SMA"]        = talib.SMA(bars.close, 1500)
     bars["Major"]      = talib.LINEARREG_ANGLE(bars.SMA,   4)
+    bars["Major[-2]"]  = bars.Major.shift()
     bars["Minor1"]     = talib.LINEARREG_ANGLE(bars.ema_C, 4)
     bars["Minor1[-2]"] = bars.Minor1.shift()
     bars["Minor1[-3]"] = bars.Minor1.shift(2)
     bars["Minor1[-4]"] = bars.Minor1.shift(3)
+    bars["Minor1[-5]"] = bars.Minor1.shift(4)
+    bars["Minor1[-6]"] = bars.Minor1.shift(5)
+    bars["Minor1[-7]"] = bars.Minor1.shift(6)
+    bars["Minor1[-8]"] = bars.Minor1.shift(7)
     bars["Minor2"]     = talib.LINEARREG_ANGLE(bars.ema_D, 4)
     bars["Minor2[-2]"] = bars.Minor2.shift()
+    bars["Minor2[-3]"] = bars.Minor2.shift(2)
     bars["D&Time"]     = bars.apply(lambda x: datetime.datetime.fromtimestamp((x['time'])/1000), axis=1)    
     bars['BuySell']    = bars.apply(BuySellLogic, axis=1)    
     bars['Profit']     = bars.apply(Profit, axis=1)    
@@ -360,7 +499,7 @@ bars = get_bars()
 print(bars)
 print("done bars")
 
-bars.to_excel(r'C:\Users\Personal Computer\Desktop\datalive4.xlsx')
+bars.to_excel(r'C:\Users\Personal Computer\Desktop\datalive4.7.2.xlsx')
 print("done excel")
 print(f"Profit gained: {bars['Profit'].sum()}")
 
