@@ -2,15 +2,25 @@
 
 - Change Buy Signal #2
 - simplify the functions and codes.
-- make a chart for datalive to go to excel for analyzation purposes.
-- Add Buy and Sell signals in Major >= 1.5
-- Add new Sell signal which is exclusive only for Buy2?
+- Add new Sell signal which is exclusive only for Buy2? Fix SellB2
 - Add new Sell signal which is exclusive only for Buy1Ai?
 - Revamp Buy-1B to reduce number of trades or commissions
-- use RSI to add new signals
+- Revamp Buy1Ai
+- Remove or Revamp Buy1Aii
+- use RSI to add new/improve signals
 
 
 === UPDATES IN MM_BOT ===
+
+Summary of Changes in January 30 - February 3, 2023:
+
+- temporarily added SellB2
+- added BuyRSI
+- added Buy-RSI
+- added Sell-RSI
+- added Sell-RSIi
+- temporarily revamped Sell-RSI (5.1.1)
+- added new variable called buystatus
 
 Summary of Changes in January 23-28, 2023:
 
