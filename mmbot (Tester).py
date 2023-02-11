@@ -701,7 +701,7 @@ bars = get_bars()
 print(bars)
 print(f"done bars. wait for excel. Profit gained: {bars['Profit'].sum()}")
 
-bars.to_excel(r'C:\Users\Personal Computer\Desktop\backtest5.2.a.xlsx')
+bars.to_excel(r'C:\Users\Personal Computer\Desktop\backtest6.0.0.xlsx')
 print("done excel")
 print(f"Profit gained: {bars['Profit'].sum()}")
 
