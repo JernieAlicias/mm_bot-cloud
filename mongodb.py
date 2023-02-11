@@ -16,7 +16,7 @@ def data_inserter():
 
 # Used to insert new data in a collection for the first time
 def data_inserter2():
-    place = {"_id": "USDT_Wallet", "balance" : 0} 
+    place = {"_id": "Open_placeh", "openvalue" : 0} 
     datab.insert_one(place) 
     
 
@@ -24,6 +24,15 @@ def data_inserter2():
 def get_placeholder_buy():
     x = datab.find_one({"_id":"Buy_placeh"})
     return x["bought at"]
+
+# Used to get the "openvalue" value in the placeholder for buy
+def get_openvalue():
+    x = datab.find_one({"_id":"Open_placeh"})
+    return x["openvalue"]
+
+# Used to store the openvalue variable
+def store_openvalue(openv):
+    datab.update_one({"_id":"Open_placeh"}, {"$set":{ "openvalue": openv}})
 
 # Used to store the wallet balance for profit calculation
 def store_datab_walletbal(bal):

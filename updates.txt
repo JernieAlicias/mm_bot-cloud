@@ -5,12 +5,33 @@
 - Add new Sell signal which is exclusive only for Buy2? Fix SellB2
 - Add new Sell signal which is exclusive only for Buy1Ai?
 - Revamp Buy-1B to reduce number of trades or commissions
-- Revamp Buy1Ai
-- Remove or Revamp Buy1Aii
-- use RSI to add new/improve signals
+- REVAMP SELL-RSI TO INCREASE PROFIT
+- adjust the value of all range() in timesleep codes from 5 to 10 ?
+- Move/Add Buy1Aii to Minor1 < -2
+- add BuyRSI under    Minor1 < -2
+- #temporarily added Sell1Aii
+- #temporarily added SellB2
+- #temporarily added Buy1Aii2
+- add sellstatus
+
 
 
 === UPDATES IN MM_BOT ===
+
+Summary of Changes in February 6 - February 10, 2023:
+
+- #temporarily added Sell1Aii
+- #temporarily added Buy1Aii2
+- revamped Buy1Aii
+- revamped Buy1Ai
+- revamped Buy1B
+- revamped Buy1Bi 
+- revamped Sell1Bi
+- added Sellfor1B 
+- added openvalue variable
+- revamped Buy-RSI
+- revamped Sell-RSIi
+- made some adjustments on the buystatus conditions
 
 Summary of Changes in January 30 - February 3, 2023:
 
@@ -20,7 +41,7 @@ Summary of Changes in January 30 - February 3, 2023:
 - added Sell-RSI
 - added Sell-RSIi
 - temporarily revamped Sell-RSI (5.1.1)
-- added new variable called buystatus
+- added new variable called buystatus for Buy-1B
 
 Summary of Changes in January 23-28, 2023:
 
