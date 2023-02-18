@@ -6,13 +6,14 @@ store_datab_walletbal, get_datab_walletbal, get_openvalue, store_openvalue)
 client = Client(config.api_key, config.api_secret, testnet=True)
 print("\nSuccessfully logged in", end="\n\n")
 
-SYMBOL    = 'ETHUSDT'
-ASSET     = 'USDT'
-TIMEFRAME = '1m'
-QTY_TRADE =  1
-openvalue =  0
-buyid     = 'none'
-buystatus = 'buy'
+SYMBOL     = 'ETHUSDT'
+ASSET      = 'USDT'
+TIMEFRAME  = '1m'
+QTY_TRADE  =  1
+openvalue  =  0
+buyid      = ''
+buystatus  = []
+sellstatus = []
 
 # Prints the current date and time at the end of the display
 def print_datetime():
@@ -48,7 +49,7 @@ def get_mark_price():
 # Function that prints the current price, mark price, position, and other data on the display
 def print_data():
     print(f"Current: {get_last_price()}  /  Mark Price: {get_mark_price()}  /  Place: {get_placeholder_buy()}  /  Position: {position}")
-    print(f"Major: {bars.Major.iloc[-1]}  /  Minor1: {bars.Minor1.iloc[-1]}  /  Minor2: {bars.Minor2.iloc[-1]}")
+    print(f"Major: {bars.Major.iloc[-1]}  /  Minor1: {bars.Minor1.iloc[-1]}  /  Minor2: {bars.Minor2.iloc[-1]}  /  Buystatus: {buystatus}")
     return 
 
 # Gets the bars/klines in 5 minutes data timeframe from Binance Futures then adds the indicators
@@ -94,31 +95,72 @@ def order_sell(sellid):
 # Function for the buy and sell logic of mm_bot
 def buy_sell_logic(place, openv):
     print_data()
-    global buyid, buystatus
+    global buyid, buystatus, sellstatus
 
-    #
-    if float(bars.Major.iloc[-1]) <= -1.5:
+    if position == 0:
 
-        if (float(bars.Minor1.iloc[-2]) < -20 and float(bars.Minor1.iloc[-1]) < -20): buystatus = 'dontbuy'
+        sellstatus = []
+        if float(bars.Major.iloc[-1]) <= -1.5:
 
-        if (float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-3]) > 2 or
-            float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) > 1.5): buystatus = 'buy'
+            if (buystatus.count('dontbuy') == 0 and (float(bars.Minor1.iloc[-2]) < -20 and 
+                float(bars.Minor1.iloc[-1]) < -20)): buystatus = ['dontbuy']
 
-        if float(bars.close.iloc[-1]) < float(bars.ema_C.iloc[-1]) < float(bars.ema_D.iloc[-1]):
+            if (buystatus.count('dontbuy') > 0  and float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-3]) > 2 or
+                float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) > 1.5): buystatus = []
 
-            if buystatus == 'buy-1b':
+            if float(bars.close.iloc[-1]) < float(bars.ema_C.iloc[-1]) < float(bars.ema_D.iloc[-1]):
 
-                if (float(bars.ema_A.iloc[-3]) > float(bars.ema_B.iloc[-3]) and
-                    float(bars.ema_A.iloc[-2]) < float(bars.ema_B.iloc[-2])): buystatus = 'buy'
+                if buystatus.count('buy-1b') > 0:
 
-            elif float(bars.Minor1.iloc[-1]) <= -2:
+                    if (float(bars.ema_A.iloc[-3]) > float(bars.ema_B.iloc[-3]) and
+                        float(bars.ema_A.iloc[-2]) < float(bars.ema_B.iloc[-2])): buystatus = []
 
-                if (float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) >=
-                    math.log(-float(bars.Minor1.iloc[-1]),2)): buystatus = 'buy-1b'
+                elif float(bars.Minor1.iloc[-1]) <= -2:
+
+                    if (buystatus.count('buy-1b') == 0 and float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) >=
+                        math.log(-float(bars.Minor1.iloc[-1]),2)):
+
+                        n = 0
+                        for _ in  range(5):
+                            if (buystatus.count('buy-1b') == 0 and float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) >=
+                                math.log(-float(bars.Minor1.iloc[-1]),2)): n += 1
+                            time.sleep(3)                      
+                        if  n == 5: 
+                            buystatus.append('buy-1b')
+
+        elif -1.5 < float(bars.Major.iloc[-1]) < 1.5: 
+
+            if (buystatus.count('dontbuy') == 0 and (float(bars.Minor1.iloc[-2]) < -20 and 
+                float(bars.Minor1.iloc[-1]) < -20)): buystatus = ['dontbuy']
+
+            if (buystatus.count('dontbuy') > 0  and float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-3]) > 2 or
+                float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) > 1.5): buystatus = []
+
+            #Buystatus for Buy1Ai
+            if (buystatus.count('buy1ai') == 0 and float(bars.Minor1.iloc[-6]) <= -2 and float(bars.Minor1.iloc[-7]) <= -2 and
+                float(bars.Minor1.iloc[-5]) -  float(bars.Minor1.iloc[-8]) > 0 and 
+                float(bars.Minor1.iloc[-1]) >  0 and float(bars.close.iloc[-1]) >
+                float(bars.close.iloc[-2])  >  float(bars.close.iloc[-3]) > float(bars.close.iloc[-4])):
+
+                n = 0
+                for _ in  range(5):
+                    if (buystatus.count('buy1ai') == 0 and float(bars.Minor1.iloc[-6]) <= -2 and float(bars.Minor1.iloc[-7]) <= -2 and
+                        float(bars.Minor1.iloc[-5]) -  float(bars.Minor1.iloc[-8]) > 0 and 
+                        float(bars.Minor1.iloc[-1]) >  0 and float(bars.close.iloc[-1]) >
+                        float(bars.close.iloc[-2])  >  float(bars.close.iloc[-3]) > 
+                        float(bars.close.iloc[-4])): n += 1
+                    time.sleep(3)                      
+                if  n == 5: 
+                    buystatus.append('buy1ai')
+
+    elif position == 1:
+
+        buystatus = []
+        if -1.5 < float(bars.Major.iloc[-1]) < 1.5: pass
 
     if position < QTY_TRADE: # BUYING PHASE
 
-        if buystatus == 'dontbuy': print("You're in Buying phase, waiting to buy [0] / ", end="") 
+        if buystatus.count('dontbuy') > 0: print("You're in Buying phase, waiting to buy [0] / ", end="") 
         
         # If the major trend starts to go bullish, then the bot buys immediately
         elif 1.5 <= float(bars.Major.iloc[-1]):
@@ -281,21 +323,19 @@ def buy_sell_logic(place, openv):
  #                   else: print("You're in Buying phase, waiting to buy [2-4a] / ", end="")
 
             # 
-            elif (float(bars.Minor1.iloc[-6]) <= -2 and float(bars.Minor1.iloc[-7]) <= -2 and
-                  float(bars.Minor1.iloc[-5]) -  float(bars.Minor1.iloc[-8]) > 0 and 
-                  float(bars.Minor1.iloc[-1]) >  0 and float(bars.close.iloc[-1]) >
-                  float(bars.close.iloc[-2])  >  float(bars.close.iloc[-3]) > float(bars.close.iloc[-4])):
+            elif (buystatus.count('buy1ai') > 0 and 
+                  float(bars.close.iloc[-2]) < float(bars.open.iloc[-2]) and
+                  float(bars.close.iloc[-1]) > float(bars.open.iloc[-1])):
 
                 n = 0
-                for _ in  range(5):
-                    if (float(bars.Minor1.iloc[-6]) <= -2 and float(bars.Minor1.iloc[-7]) <= -2 and
-                        float(bars.Minor1.iloc[-5]) -  float(bars.Minor1.iloc[-8]) > 0 and 
-                        float(bars.Minor1.iloc[-1]) >  0 and float(bars.close.iloc[-1]) >
-                        float(bars.close.iloc[-2])  >  float(bars.close.iloc[-3]) > 
-                        float(bars.close.iloc[-4])): n += 1
+                for _ in  range(10):
+                    if (buystatus.count('buy1ai') > 0 and 
+                        float(bars.close.iloc[-2]) < float(bars.open.iloc[-2]) and
+                        float(bars.close.iloc[-1]) > float(bars.open.iloc[-1])): n += 1
                     time.sleep(3)                      
-                if  n == 5: 
+                if  n == 10: 
                     buyid = 'Buy1Ai'
+                    buystatus = []
                     order_buy(buyid)
                     print("Order Buy id:Buy1Ai - Sleeping for 1 minute")  
                     time.sleep(60)  
@@ -314,9 +354,9 @@ def buy_sell_logic(place, openv):
                 if float(bars.Minor1.iloc[-1]) <= -2:
 
                     #
-                    if (float(bars.RSI.iloc[-3])   - float(bars.RSI.iloc[-4]) < 0  and float(bars.RSI.iloc[-3]) < 30  and 
+                    if (buystatus.count('dontbuy') == 0  and float(bars.RSI.iloc[-3]) - float(bars.RSI.iloc[-4]) < 0 and float(bars.RSI.iloc[-3]) < 30 and 
                       ((float(bars.RSI.iloc[-2])   - float(bars.RSI.iloc[-3]) > 1  and float(bars.RSI.iloc[-2]) < 30) or 
-                        float(bars.RSI.iloc[-2])   - float(bars.RSI.iloc[-3]) > 5) and buystatus == 'buy' and
+                        float(bars.RSI.iloc[-2])   - float(bars.RSI.iloc[-3]) > 5) and 
                         float(bars.close.iloc[-1]) > float(bars.open.iloc[-2])):
 
                         n = 0
@@ -332,17 +372,17 @@ def buy_sell_logic(place, openv):
                         else: print("You're in Buying phase, waiting to buy [3-1a] / ", end="")
 
                     # If the price suddenly spikes up, then the buy condition is:
-                    elif (buystatus == 'buy-1b' and float(bars.close.iloc[-2]) < float(bars.ema_A.iloc[-2]) and
+                    elif (buystatus.count('buy-1b') > 0  and float(bars.close.iloc[-2]) < float(bars.ema_A.iloc[-2]) and
                           float(bars.close.iloc[-1]) > float(bars.ema_A.iloc[-1])):
 
                         n = 0
                         for _ in  range(5):
-                            if (buystatus == 'buy-1b' and float(bars.close.iloc[-2]) < float(bars.ema_A.iloc[-2]) and
+                            if (buystatus.count('buy-1b') > 0  and float(bars.close.iloc[-2]) < float(bars.ema_A.iloc[-2]) and
                                 float(bars.close.iloc[-1]) > float(bars.ema_A.iloc[-1])): n += 1
                             time.sleep(3)                      
                         if  n == 5: 
                             buyid = 'Buy-1B'
-                            buystatus = 'buy'
+                            buystatus = ''
                             order_buy(buyid)
                             print("Order Buy id:Buy-1B - Sleeping for 1 minute")  
                             time.sleep(60)  
@@ -373,7 +413,7 @@ def buy_sell_logic(place, openv):
                         time.sleep(3)                      
                     if  n == 5: 
                         order_sell("Sell+1A")
-                        buyid = 'none'
+                        buyid = ''
                         print("Order Sell id:Sell+1A - Sleeping for 1 minute")  
                         time.sleep(60)  
 
@@ -399,7 +439,7 @@ def buy_sell_logic(place, openv):
                     time.sleep(3)                      
                 if  n == 5: 
                     order_sell("Sell1Bi")
-                    buyid = 'none'
+                    buyid = ''
                     print("Order Sell id:Sell1Bi - Sleeping for 1 minute")  
                     time.sleep(60)  
 
@@ -416,11 +456,28 @@ def buy_sell_logic(place, openv):
                     time.sleep(3)                      
                 if  n == 3: 
                     order_sell("Sellfor1B")
-                    buyid = 'none'
+                    buyid = ''
                     print("Order Sell id:Sellfor1B - Sleeping for 1 minute")  
                     time.sleep(60)  
 
                 else: print("You're in Selling phase, waiting to sell [2-2a] / ", end="")
+
+            #
+            elif (buyid == 'Buy1Ai' and
+                  float(bars.close.iloc[-1]) < place - 1):
+
+                n = 0
+                for _ in  range(3):
+                    if (buyid == 'Buy1Ai' and
+                        float(bars.close.iloc[-1]) < place - 1): n += 1
+                    time.sleep(3)                      
+                if  n == 3: 
+                    order_sell("Sellfor1Ai")
+                    buyid = ''
+                    print("Order Sell id:Sellfor1Ai - Sleeping for 1 minute")  
+                    time.sleep(60)  
+
+                else: print("You're in Selling phase, waiting to sell [2-2b] / ", end="")
 
             #
             elif (buyid == 'Buy-RSI' and
@@ -428,7 +485,7 @@ def buy_sell_logic(place, openv):
 
                     #Sell Immediately
                     order_sell("Sell-RSIi")
-                    buyid = 'none'
+                    buyid = ''
                     print("Order Sell id:Sell-RSIi - Sleeping for 1 minute")  
                     time.sleep(60)  
 
@@ -448,7 +505,7 @@ def buy_sell_logic(place, openv):
                       time.sleep(3)                      
                   if  n == 3: 
                       order_sell("Sell-RSI")
-                      buyid = 'none'
+                      buyid = ''
                       print("Order Sell id:Sell-RSI - Sleeping for 1 minute")  
                       time.sleep(60)  
 
@@ -481,7 +538,7 @@ def buy_sell_logic(place, openv):
                             time.sleep(3)                      
                         if  n == 5: 
                             order_sell("Sell1A")
-                            buyid = 'none'
+                            buyid = ''
                             print("Order Sell id:Sell1A - Sleeping for 1 minute")  
                             time.sleep(60)  
 
@@ -504,7 +561,7 @@ def buy_sell_logic(place, openv):
                             time.sleep(3)                      
                         if  n == 3: 
                             order_sell("Sell1B")
-                            buyid = 'none'
+                            buyid = ''
                             print("Order Sell id:Sell1B - Sleeping for 1 minute")  
                             time.sleep(60)  
 
@@ -530,7 +587,7 @@ def buy_sell_logic(place, openv):
                         time.sleep(3)                      
                     if  n == 3: 
                         order_sell("Sell2A")
-                        buyid = 'none'
+                        buyid = ''
                         print("Order Sell id:Sell2A - Sleeping for 1 minute")  
                         time.sleep(60)  
 
@@ -557,7 +614,7 @@ def buy_sell_logic(place, openv):
                             time.sleep(3)                      
                         if  n == 3: 
                             order_sell("Sell3A")
-                            buyid = 'none'
+                            buyid = ''
                             print("Order Sell id:Sell3A - Sleeping for 1 minute")  
                             time.sleep(60)  
 
@@ -579,7 +636,7 @@ def buy_sell_logic(place, openv):
 
                     #Sell Immediately
                     order_sell("Sell-RSIi")
-                    buyid = 'none'
+                    buyid = ''
                     print("Order Sell id:Sell-RSIi - Sleeping for 1 minute")  
                     time.sleep(60)  
 
@@ -598,7 +655,7 @@ def buy_sell_logic(place, openv):
                         time.sleep(3)                      
                     if  n == 3: 
                         order_sell("Sell-RSI")
-                        buyid = 'none'
+                        buyid = ''
                         print("Order Sell id:Sell-RSI - Sleeping for 1 minute")  
                         time.sleep(60)  
 
@@ -617,7 +674,7 @@ def buy_sell_logic(place, openv):
                         time.sleep(3)                      
                     if  n == 3: 
                         order_sell("Sell-1Bi")
-                        buyid = 'none'
+                        buyid = ''
                         print("Order Sell id:Sell-1Bi - Sleeping for 1 minute")  
                         time.sleep(60)  
 
@@ -637,7 +694,7 @@ def buy_sell_logic(place, openv):
                         time.sleep(3)                      
                     if  n == 3: 
                         order_sell("Sell-1B")
-                        buyid = 'none'
+                        buyid = ''
                         print("Order Sell id:Sell-1B - Sleeping for 1 minute")  
                         time.sleep(60)  
 

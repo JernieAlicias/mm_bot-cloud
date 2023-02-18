@@ -3,20 +3,36 @@
 - Change Buy Signal #2
 - simplify the functions and codes.
 - Add new Sell signal which is exclusive only for Buy2? Fix SellB2
-- Add new Sell signal which is exclusive only for Buy1Ai?
+- connect mmbot to live futures data instead of testnet data ??
 - Revamp Buy-1B to reduce number of trades or commissions
 - REVAMP SELL-RSI TO INCREASE PROFIT
 - adjust the value of all range() in timesleep codes from 5 to 10 ?
+- change buy value of Buy2 to open? remove for loop?
 - Move/Add Buy1Aii to Minor1 < -2
 - add BuyRSI under    Minor1 < -2
 - #temporarily added Sell1Aii
 - #temporarily added SellB2
 - #temporarily added Buy1Aii2
-- add sellstatus
+- #temporarily added Sell3B
+- add buystatus and sellstatus to mongodb
 
 
 
 === UPDATES IN MM_BOT ===
+
+Summary of Changes in February 13 - February 17, 2023:
+
+- added Sellfor1Ai
+- revamped Buy1Ai
+- added new buystatus variable: "buy1ai"
+- revamped buystatus and sellstatus variable into list
+- tried to revamp Buy1Aii but resulted into much more number of trades (more commissions)
+  which results in lesser net profit, therefore this is cancelled.
+- tried to connect our replt mmbot to live binance account to fetch live bars (instead of testnet bars for more
+  accuracy and lesser noise) but failed due to replt servers being located at US (binance.com is banned at US)
+- tried to find a solution for the above issue by connecting our replt mmbot to a proxy server to change its ip
+  but still failed due to SSLError: EOF occurred in violation of protocol. 
+
 
 Summary of Changes in February 6 - February 10, 2023:
 
