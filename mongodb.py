@@ -66,3 +66,9 @@ def get_sum_profits():
         sum_profit += float(x["profit"])
     return sum_profit
 
+# Used to delete a number of documents in a collection
+def deleter():
+    for i in range(50):
+        buyvalue_history.delete_many({'_id':i})
+
+        

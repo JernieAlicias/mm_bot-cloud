@@ -38,7 +38,14 @@ def BuySellLogic(x):
 
             if ('dontbuy' in bstatus) and x['Minor1'] - x['Minor1[-2]'] > -2.5: bstatus.discard('dontbuy')
 
-            if float(x['close']) < x['ema_C'] and x['Minor1'] <= -2:
+            if ('buy-rsi' in bstatus) or ('buy-1b' in bstatus) or ('buy1ai' in bstatus):
+
+                if x['ema_A[-3]'] > x['ema_B[-3]'] and x['ema_A[-2]'] < x['ema_B[-2]']: 
+                    bstatus.discard('buy-rsi')
+                    bstatus.discard('buy-1b')
+                    bstatus.discard('buy1ai')
+
+            elif float(x['close']) < x['ema_C'] < x['ema_D'] and x['Minor1'] <= -2:
 
                 if (('buy-rsi' not in bstatus) and  x['RSI[-3]'] - x['RSI[-4]'] < 1.5 and 
                     x['RSI[-3]'] < 30 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 30) or 
@@ -49,12 +56,6 @@ def BuySellLogic(x):
                 if (('buy-1b' not in bstatus) and x['Minor1'] - x['Minor1[-2]'] >= 
                     math.log(-x['Minor1'],2)): bstatus.add('buy-1b')
 
-            if ('buy-rsi' in bstatus) or ('buy-1b' in bstatus) or ('buy1ai' in bstatus):
-
-                if x['ema_A[-3]'] > x['ema_B[-3]'] and x['ema_A[-2]'] < x['ema_B[-2]']: 
-                    bstatus.discard('buy-rsi')
-                    bstatus.discard('buy-1b')
-                    bstatus.discard('buy1ai')
 
         elif -1.5 < x['Major'] < 1.5:
 
@@ -63,25 +64,17 @@ def BuySellLogic(x):
             if (('dontbuy' in bstatus) and 
                 (x['Minor1'] - x['Minor1[-3]'] > 2 or x['Minor1'] - x['Minor1[-2]'] > 1.5)): bstatus.discard('dontbuy')
 
-            if (('buy1ai' not in bstatus) and x['Minor1[-6]'] <= -2 and x['Minor1[-7]'] <= -2 and
-                x['Minor1[-5]'] - x['Minor1[-8]'] > 0 and x['Minor1'] > 0 and
-                float(x['close']) > float(x['close[-2]']) > float(x['close[-3]']) > float(x['close[-4]'])): 
-                bstatus.add('buy1ai')
-
-            if float(x['close']) < x['ema_C'] and x['Minor1'] <= -2:
-
-                if (('buy-rsi' not in bstatus) and  x['RSI[-3]'] - x['RSI[-4]'] < 1.5 and 
-                    x['RSI[-3]'] < 30 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 30) or 
-                    x['RSI'] - x['RSI[-2]'] > 5)): 
-                    bstatus.add('buy-rsi')
-                    return None
-
             if ('buy-rsi' in bstatus) or ('buy-1b' in bstatus) or ('buy1ai' in bstatus):
 
                 if x['ema_A[-3]'] > x['ema_B[-3]'] and x['ema_A[-2]'] < x['ema_B[-2]']: 
                     bstatus.discard('buy-rsi')
                     bstatus.discard('buy-1b')
                     bstatus.discard('buy1ai')
+
+            elif (('buy1ai' not in bstatus) and x['Minor1[-6]'] <= -2 and x['Minor1[-7]'] <= -2 and
+                x['Minor1[-5]'] - x['Minor1[-8]'] > 0 and x['Minor1'] > 0 and
+                float(x['close']) > float(x['close[-2]']) > float(x['close[-3]']) > float(x['close[-4]'])): 
+                bstatus.add('buy1ai')
 
     elif position == 1:
 
@@ -95,19 +88,11 @@ def BuySellLogic(x):
 
     if position == 0:
 
-        if ('dontbuy' in bstatus): return None
+        if ('dontbuy' in bstatus): return str(bstatus) + ' dontbuy'
 
         elif -1.5 < x['Major'] < 1.5:
 
-            if (('buy-rsi' in bstatus) and 
-                float(x['close']) > float(x['open']) + 1):
-                position = 1
-                bstatus  = set()
-                buyvalue = (float(x['close']) + float(x['open']))/2
-                buyid = 'Buy-RSI'
-                return 'Buy-RSI'             
-
-            elif float(x['close']) < x['ema_C'] < x['ema_D']:
+            if float(x['close']) < x['ema_C'] < x['ema_D']:
 
                 if -2 < x['Minor1'] < -1.5:
 
@@ -123,7 +108,7 @@ def BuySellLogic(x):
                           buyid = 'Buy1Aii'
                           return 'Buy1Aii'
 
-                    else: return None
+                    else: return str(bstatus) + ' 2'
 
                 elif x['Minor1'] <= -3:
 
@@ -142,9 +127,9 @@ def BuySellLogic(x):
 #                          buyid = 'Buy1Aii2'
 #                          return 'Buy1Aii2'  
 
-                    else: return None
+                    else: return str(bstatus) + ' 3'
 
-                else: return None
+                else: return str(bstatus) + ' 4'
 
             elif float(x['close']) < x['ema_C']:
 
@@ -159,9 +144,9 @@ def BuySellLogic(x):
                         #Then sleep for 2 mins
                         return 'Buy1Bi'
 
-                    else: return None
+                    else: return str(bstatus) + ' 5'
 
-                else: return None
+                else: return str(bstatus) + ' 6'
 
             elif x['Minor1[-2]'] - x['Minor1[-5]'] >= 3:
 
@@ -173,7 +158,7 @@ def BuySellLogic(x):
                     buyid = 'Buy2'
                     return 'Buy2'
 
-                else: return None
+                else: return str(bstatus) + ' 7'
 
             elif (('buy1ai' in bstatus) and 
                   float(x['close[-2]']) < float(x['open[-2]']) and float(x['close']) > float(x['open'])):
@@ -183,7 +168,7 @@ def BuySellLogic(x):
                     buyid = 'Buy1Ai'
                     return 'Buy1Ai'
             
-            else: return None
+            else: return str(bstatus) + ' 8'
 
         elif x['Major'] <= -1.5 or x['Major[-2]'] <= -1.5:
 
@@ -191,7 +176,7 @@ def BuySellLogic(x):
                 float(x['close']) > float(x['open']) + 1):
                 position = 1
                 bstatus  = set()
-                buyvalue = (float(x['close']) + float(x['open']))/2
+                buyvalue = float(x['open'])
                 buyid = 'Buy-RSI'
                 return 'Buy-RSI'              
 
@@ -203,7 +188,7 @@ def BuySellLogic(x):
                 buyid = 'Buy-1B'
                 return 'Buy-1B'
 
-            else: return None
+            else: return str(bstatus) + ' a'
 
         elif 1.5 <= x['Major']:
 
@@ -216,21 +201,21 @@ def BuySellLogic(x):
                     buyid = 'Buy+2'
                     return 'Buy+2'
 
-                else: return None
+                else: return str(bstatus) + ' b'
 
-            else: return None
+            else: return str(bstatus) + ' c'
 
-        else: return None
+        else: return str(bstatus) + ' d'
 
     else: # if position == 1:
 
         if  buyid == 'Buy-1B': 
             buyid = 'go to Buy-1Bi'
-            return None
+            return str(bstatus) + ' e'
 
         elif buyid == 'Buy1Bi':
              buyid = 'go to Buy1Bi'
-             return None
+             return str(bstatus) + ' f'
 
         elif -1.5 < x['Major']  <  1.5:
 
@@ -289,7 +274,7 @@ def BuySellLogic(x):
                         buyid = ''
                         return 'Sell1A'
 
-                    else: return None
+                    else: return str(bstatus) + ' g'
 
                 elif 2 <= x['Minor1']:
 
@@ -298,9 +283,9 @@ def BuySellLogic(x):
                         buyid = ''
                         return 'Sell1B'
 
-                    else: return None
+                    else: return str(bstatus) + ' h'
 
-                else: return None
+                else: return str(bstatus) + ' i'
 
             elif x['ema_C'] >= float(x['close']) > x['ema_D']:
 
@@ -310,7 +295,7 @@ def BuySellLogic(x):
                     buyid = ''
                     return 'Sell2A'
 
-                else: return None
+                else: return str(bstatus) + ' j'
 
             elif x['ema_D'] > float(x['close']) > x['ema_C'] or float(x['close']) > x['ema_D'] > x['ema_C']:
 
@@ -329,9 +314,9 @@ def BuySellLogic(x):
 
                     else: return 
                     
-                else: return None 
+                else: return str(bstatus) + ' k'    
 
-            else: return None
+            else: return str(bstatus) + ' m'
 
         elif x['Major'] <= -1.5:
 
@@ -351,7 +336,7 @@ def BuySellLogic(x):
                     sstatus = set()
                     return 'Sell-RSI'
 
-                else: return None
+                else: return str(bstatus) + ' n'
 
             elif buyid == 'go to Buy-1Bi': #from Buy-1B
 
@@ -365,9 +350,9 @@ def BuySellLogic(x):
                     buyid = ''
                     return 'Sell-1B'
 
-                else: return None
+                else: return str(bstatus) + ' o'
 
-            else: return None
+            else: return str(bstatus) + ' p'
 
         elif 1.5 < x['Major']:
 
@@ -378,9 +363,9 @@ def BuySellLogic(x):
                         buyid = ''
                         return 'Sell+1A'
 
-                    else: return None
+                    else: return str(bstatus) + ' q'
 
-                else: return None
+                else: return str(bstatus) + ' r'
 
 #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -397,7 +382,14 @@ def Profit(x):
 
             if (('dontbuy' in bst) and x['Minor1'] - x['Minor1[-2]'] > -2.5): bst.discard('dontbuy')
 
-            if float(x['close']) < x['ema_C'] and x['Minor1'] <= -2:
+            if ('buy-rsi' in bst) or ('buy-1b' in bst) or ('buy1ai' in bst):
+
+                if x['ema_A[-3]'] > x['ema_B[-3]'] and x['ema_A[-2]'] < x['ema_B[-2]']: 
+                    bst.discard('buy-rsi')
+                    bst.discard('buy-1b')
+                    bst.discard('buy1ai')
+
+            elif float(x['close']) < x['ema_C'] < x['ema_D'] and x['Minor1'] <= -2:
 
                 if (('buy-rsi' not in bst) and  x['RSI[-3]'] - x['RSI[-4]'] < 1.5 and 
                     x['RSI[-3]'] < 30 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 30) or 
@@ -408,12 +400,6 @@ def Profit(x):
                 if (('buy-1b' not in bst) and x['Minor1'] - x['Minor1[-2]'] >= 
                     math.log(-x['Minor1'],2)): bst.add('buy-1b')
 
-            if ('buy-rsi' in bst) or ('buy-1b' in bst) or ('buy1ai' in bst):
-
-                if x['ema_A[-3]'] > x['ema_B[-3]'] and x['ema_A[-2]'] < x['ema_B[-2]']: 
-                    bst.discard('buy-rsi')
-                    bst.discard('buy-1b')
-                    bst.discard('buy1ai')
 
         elif -1.5 < x['Major'] < 1.5:
 
@@ -422,25 +408,17 @@ def Profit(x):
             if (('dontbuy' in bst) and 
                 (x['Minor1'] - x['Minor1[-3]'] > 2 or x['Minor1'] - x['Minor1[-2]'] > 1.5)): bst.discard('dontbuy')
 
-            if (('buy1ai' not in bst) and x['Minor1[-6]'] <= -2 and x['Minor1[-7]'] <= -2 and
-                x['Minor1[-5]'] - x['Minor1[-8]'] > 0 and x['Minor1'] > 0 and
-                float(x['close']) > float(x['close[-2]']) > float(x['close[-3]']) > float(x['close[-4]'])): 
-                bst.add('buy1ai')
-
-            if float(x['close']) < x['ema_C'] and x['Minor1'] <= -2:
-
-                if (('buy-rsi' not in bst) and  x['RSI[-3]'] - x['RSI[-4]'] < 1.5 and 
-                    x['RSI[-3]'] < 30 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 30) or 
-                    x['RSI'] - x['RSI[-2]'] > 5)): 
-                    bst.add('buy-rsi')
-                    return None
-
             if ('buy-rsi' in bst) or ('buy-1b' in bst) or ('buy1ai' in bst):
 
                 if x['ema_A[-3]'] > x['ema_B[-3]'] and x['ema_A[-2]'] < x['ema_B[-2]']: 
                     bst.discard('buy-rsi')
                     bst.discard('buy-1b')
                     bst.discard('buy1ai')
+
+            elif (('buy1ai' not in bst) and x['Minor1[-6]'] <= -2 and x['Minor1[-7]'] <= -2 and
+                x['Minor1[-5]'] - x['Minor1[-8]'] > 0 and x['Minor1'] > 0 and
+                float(x['close']) > float(x['close[-2]']) > float(x['close[-3]']) > float(x['close[-4]'])): 
+                bst.add('buy1ai')
 
     elif p1 == 1:
         
@@ -458,16 +436,7 @@ def Profit(x):
 
         if -1.5 < x['Major']  <  1.5:
 
-            if (('buy-rsi' in bst) and 
-                float(x['close']) > float(x['open']) + 1):
-                p1 = 1
-                bst = set()
-                b1 = (float(x['close']) + float(x['open']))/2
-                bi1 = 'Buy-RSI'
-                #Buy-RSI
-                return None
-
-            elif float(x['close']) < x['ema_C'] < x['ema_D']:
+            if float(x['close']) < x['ema_C'] < x['ema_D']:
 
                 if -2 < x['Minor1'] < -1.5:
 
@@ -558,7 +527,7 @@ def Profit(x):
                 float(x['close']) > float(x['open']) + 1):
                 p1 = 1
                 bst = set()
-                b1 = (float(x['close']) + float(x['open']))/2
+                b1 = float(x['open'])
                 bi1 = 'Buy-RSI'
                 #Buy-RSI
                 return None
@@ -836,7 +805,7 @@ bars = get_bars()
 print(bars)
 print(f"done bars. wait for excel. Profit gained: {bars['Profit'].sum()}")
 
-bars.to_excel(r'C:\Users\Personal Computer\Desktop\backtest7.2.8.xlsx')
+bars.to_excel(r'C:\Users\Personal Computer\Desktop\backtest7.2.5.xlsx')
 print("done excel")
 print(f"Profit gained: {bars['Profit'].sum()}")
 
