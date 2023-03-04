@@ -10,7 +10,7 @@ SYMBOL     = 'ETHUSDT'
 ASSET      = 'USDT'
 TIMEFRAME  = '1m'
 QTY_TRADE  =  1
-openvalue  =  0
+tempvalue  =  0
 buyid      = ''
 buystatus  = set()
 sellstatus = set()
@@ -95,7 +95,7 @@ def order_sell(sellid):
 # Function for the buy and sell logic of mm_bot
 def buy_sell_logic(place, openv):
     print_data()
-    global buyid, buystatus, sellstatus
+    global tempvalue, buyid, buystatus, sellstatus
 
     if position == 0:
 
@@ -104,17 +104,19 @@ def buy_sell_logic(place, openv):
 
             if (('dontbuy' not in buystatus) and ((float(bars.Minor1.iloc[-2]) < -20 and 
                 float(bars.Minor1.iloc[-1]) < -20) or float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-3]) < -2 or
-                float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) < -1.5)): buystatus.add('dontbuy')
+                float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) < -1.5)): 
+                buystatus.add('dontbuy')
 
             if ('dontbuy' in buystatus) and float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) > -2.5: 
                 buystatus.discard('dontbuy')
 
             if (float(bars.close.iloc[-1]) < float(bars.ema_C.iloc[-1]) and float(bars.Minor1.iloc[-1]) <= -2):
 
-                if (('buy-rsi' not in buystatus) and float(bars.RSI.iloc[-4]) - float(bars.RSI.iloc[-5]) < 1.5 and float(bars.RSI.iloc[-4]) < 30 and 
+                if (('buy-rsi' not in buystatus) and float(bars.RSI.iloc[-3]) - float(bars.RSI.iloc[-4]) < 1.5 and float(bars.RSI.iloc[-4]) < 30 and 
                    ((float(bars.RSI.iloc[-2]) - float(bars.RSI.iloc[-3]) > 0.75 and float(bars.RSI.iloc[-3]) < 30) or 
                      float(bars.RSI.iloc[-2]) - float(bars.RSI.iloc[-3]) > 5)):
                      buystatus.add('buy-rsi')
+                     tempvalue = float(bars.close.iloc[-2])
                      time.sleep(50) 
                      #Conditions for Buy-RSI are adjusted by -1 to compensate for Live Bars
 
@@ -140,7 +142,8 @@ def buy_sell_logic(place, openv):
         elif -1.5 < float(bars.Major.iloc[-1]) < 1.5: 
 
             if (('dontbuy' not in buystatus) and (float(bars.Minor1.iloc[-2]) < -20 and 
-                float(bars.Minor1.iloc[-1]) < -20)): buystatus.add('dontbuy')
+                float(bars.Minor1.iloc[-1]) < -20)): 
+                buystatus.add('dontbuy')
 
             if (('dontbuy' in buystatus) and float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-3]) > 2 or
                 float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) > 1.5): buystatus.discard('dontbuy')
@@ -164,10 +167,11 @@ def buy_sell_logic(place, openv):
 
             if (float(bars.close.iloc[-1])  < float(bars.ema_C.iloc[-1]) and float(bars.Minor1.iloc[-1]) <= -2):
 
-                if (('buy-rsi' not in buystatus) and float(bars.RSI.iloc[-4]) - float(bars.RSI.iloc[-5]) < 1.5 and float(bars.RSI.iloc[-4]) < 30 and 
+                if (('buy-rsi' not in buystatus) and float(bars.RSI.iloc[-3]) - float(bars.RSI.iloc[-4]) < 1.5 and float(bars.RSI.iloc[-4]) < 30 and 
                    ((float(bars.RSI.iloc[-2]) - float(bars.RSI.iloc[-3]) > 0.75 and float(bars.RSI.iloc[-3]) < 30) or 
                      float(bars.RSI.iloc[-2]) - float(bars.RSI.iloc[-3]) > 5)):
                      buystatus.add('buy-rsi')
+                     tempvalue = float(bars.close.iloc[-2])
                      time.sleep(50) 
                      #Conditions for Buy-RSI are adjusted by -1 to compensate for Live Bars
 
@@ -182,7 +186,10 @@ def buy_sell_logic(place, openv):
     elif position == 1:
 
         buystatus = set()
-        if -1.5 < float(bars.Major.iloc[-1]) < 1.5: pass
+        if -1.5 < float(bars.Major.iloc[-1]) < 1.5: 
+
+            if (buyid == 'Buy-RSI' and float(bars.ema_R.iloc[-2]) - float(bars.ema_R.iloc[-3]) > 0 and
+                float(bars.ema_R.iloc[-2]) > 30): sellstatus.add('sell-rsi')
 
         elif float(bars.Major.iloc[-1]) <= -1.5:
 
@@ -191,7 +198,13 @@ def buy_sell_logic(place, openv):
 
     if position < QTY_TRADE: # BUYING PHASE
 
-        if ('dontbuy' in buystatus): print("You're in Buying phase, waiting to buy [0] / ", end="") 
+        if ('dontbuy' in buystatus): 
+            
+            if float(bars.close.iloc[-1]) < tempvalue - 1:
+                buystatus.discard('buy-rsi')
+                print("You're in Buying phase, waiting to buy [0a] / ", end="") 
+
+            else: print("You're in Buying phase, waiting to buy [0b] / ", end="") 
         
         # If the major trend starts to go bullish, then the bot buys immediately
         elif 1.5 <= float(bars.Major.iloc[-1]):
@@ -227,19 +240,27 @@ def buy_sell_logic(place, openv):
             #
             if ('buy-rsi' in buystatus):
 
-                if float(bars.close.iloc[-1]) > float(bars.open.iloc[-1]) + 1:
+                if float(bars.close.iloc[-1]) >= tempvalue + 1:
                     buyid = 'Buy-RSI'
-                    buystatus  = set()
                     order_buy(buyid)
+                    buystatus = set()
+                    tempvalue = 0
                     print("Order Buy id:Buy-RSI - Sleeping for 1 minute")  
                     time.sleep(60)  
 
-                elif float(bars.open.iloc[-1]) + 1 >= float(bars.close.iloc[-1]) >= float(bars.open.iloc[-1]):
+                elif tempvalue + 1 > float(bars.close.iloc[-1]) > tempvalue - 1:
                     print("You're in Buying phase, waiting to buy [2-0a] / ", end="")
 
                 else: 
-                    buystatus.discard('buy-rsi')
-                    print("You're in Buying phase, waiting to buy [2-0b] / ", end="")
+                    n = 0
+                    for _ in  range(20):
+                        if float(bars.close.iloc[-1]) <= tempvalue - 1: n += 1
+                        else: break
+                        time.sleep(3)                      
+                    if  n == 20: 
+                        buystatus.discard('buy-rsi')
+
+                    else: print("You're in Buying phase, waiting to buy [2-0b] / ", end="")
             
             # If close < ema_C < ema_D. then the buy conditions are:
             elif float(bars.close.iloc[-1]) < float(bars.ema_C.iloc[-1]) < float(bars.ema_D.iloc[-1]):
@@ -398,19 +419,27 @@ def buy_sell_logic(place, openv):
             #
             if ('buy-rsi' in buystatus):
 
-                if float(bars.close.iloc[-1]) > float(bars.open.iloc[-1]) + 1:
+                if float(bars.close.iloc[-1]) >= tempvalue + 1:
                     buyid = 'Buy-RSI'
-                    buystatus  = set()
                     order_buy(buyid)
+                    buystatus = set()
+                    tempvalue = 0
                     print("Order Buy id:Buy-RSI - Sleeping for 1 minute")  
                     time.sleep(60)  
 
-                elif float(bars.open.iloc[-1]) + 1 >= float(bars.close.iloc[-1]) >= float(bars.open.iloc[-1]):
+                elif tempvalue + 1 > float(bars.close.iloc[-1]) > tempvalue - 1:
                     print("You're in Buying phase, waiting to buy [3-1a] / ", end="")
 
                 else: 
-                    buystatus.discard('buy-rsi')
-                    print("You're in Buying phase, waiting to buy [3-2b] / ", end="")
+                    n = 0
+                    for _ in  range(20):
+                        if float(bars.close.iloc[-1]) <= tempvalue - 1: n += 1
+                        else: break
+                        time.sleep(3)                      
+                    if  n == 20: 
+                        buystatus.discard('buy-rsi')
+
+                    else: print("You're in Buying phase, waiting to buy [3-2b] / ", end="")
 
             # If the price suddenly spikes up, then the buy condition is:
             elif (('buy-1b' in buystatus) and float(bars.close.iloc[-2]) < float(bars.ema_A.iloc[-2]) and
@@ -538,7 +567,7 @@ def buy_sell_logic(place, openv):
             elif (('sell-rsi' in sellstatus) and
                  ((float(bars.ema_A.iloc[-2]) >  float(bars.ema_B.iloc[-2])  and 
                    float(bars.ema_A.iloc[-1]) <= float(bars.ema_B.iloc[-1])) or
-                   float(bars.RSI.iloc[-1])   >  float(bars.ema_R.iloc[-1])) and
+                   float(bars.RSI.iloc[-1])   <  float(bars.ema_R.iloc[-1])) and
                    float(bars.close.iloc[-1]) >  place - 0.75 and float(bars.Minor1.iloc[-1]) < 15):
 
                   n = 0
@@ -546,7 +575,7 @@ def buy_sell_logic(place, openv):
                       if (('sell-rsi' in sellstatus) and
                          ((float(bars.ema_A.iloc[-2]) >  float(bars.ema_B.iloc[-2])  and 
                            float(bars.ema_A.iloc[-1]) <= float(bars.ema_B.iloc[-1])) or
-                           float(bars.RSI.iloc[-1])   >  float(bars.ema_R.iloc[-1])) and
+                           float(bars.RSI.iloc[-1])   <  float(bars.ema_R.iloc[-1])) and
                            float(bars.close.iloc[-1]) >  place - 0.75 and float(bars.Minor1.iloc[-1]) < 15): n += 1
                       time.sleep(3)                      
                   if  n == 3: 
@@ -697,7 +726,7 @@ def buy_sell_logic(place, openv):
                 elif (('sell-rsi' in sellstatus) and
                      ((float(bars.ema_A.iloc[-2]) >  float(bars.ema_B.iloc[-2])  and 
                        float(bars.ema_A.iloc[-1]) <= float(bars.ema_B.iloc[-1])) or
-                       float(bars.RSI.iloc[-1])   >  float(bars.ema_R.iloc[-1])) and
+                       float(bars.RSI.iloc[-1])   <  float(bars.ema_R.iloc[-1])) and
                        float(bars.close.iloc[-1]) >  place - 0.75 and float(bars.Minor1.iloc[-1]) < 15):
 
                     n = 0
@@ -705,7 +734,7 @@ def buy_sell_logic(place, openv):
                         if (('sell-rsi' in sellstatus) and
                            ((float(bars.ema_A.iloc[-2]) >  float(bars.ema_B.iloc[-2])  and 
                              float(bars.ema_A.iloc[-1]) <= float(bars.ema_B.iloc[-1])) or
-                             float(bars.RSI.iloc[-1])   >  float(bars.ema_R.iloc[-1])) and
+                             float(bars.RSI.iloc[-1])   <  float(bars.ema_R.iloc[-1])) and
                              float(bars.close.iloc[-1]) >  place - 0.75 and float(bars.Minor1.iloc[-1]) < 15): n += 1
                         time.sleep(3)                      
                     if  n == 3: 

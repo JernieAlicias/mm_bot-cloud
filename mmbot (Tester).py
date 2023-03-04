@@ -41,9 +41,10 @@ def BuySellLogic(x):
             if float(x['close']) < x['ema_C'] and x['Minor1'] <= -2:
 
                 if (('buy-rsi' not in bstatus) and  x['RSI[-3]'] - x['RSI[-4]'] < 1.5 and 
-                    x['RSI[-3]'] < 30 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 30) or 
+                    x['RSI[-3]'] < 40 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 40) or 
                     x['RSI'] - x['RSI[-2]'] > 5)): 
                     bstatus.add('buy-rsi')
+                    
                     return None
 
                 if (('buy-1b' not in bstatus) and x['Minor1'] - x['Minor1[-2]'] >= 
@@ -71,7 +72,7 @@ def BuySellLogic(x):
             if float(x['close']) < x['ema_C'] and x['Minor1'] <= -2:
 
                 if (('buy-rsi' not in bstatus) and  x['RSI[-3]'] - x['RSI[-4]'] < 1.5 and 
-                    x['RSI[-3]'] < 30 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 30) or 
+                    x['RSI[-3]'] < 40 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 40) or 
                     x['RSI'] - x['RSI[-2]'] > 5)): 
                     bstatus.add('buy-rsi')
                     return None
@@ -86,7 +87,10 @@ def BuySellLogic(x):
     elif position == 1:
 
         bstatus = set()
-        if -1.5 < x['Major'] < 1.5: pass
+        if -1.5 < x['Major'] < 1.5: 
+
+            if buyid == 'Buy-RSI' and x['ema_R[-2]'] - x['ema_R[-3]'] > 0 and x['ema_R[-2]'] > 30: 
+               sstatus.add('sell-rsi')
 
         elif x['Major'] <= -1.5:
 
@@ -400,7 +404,7 @@ def Profit(x):
             if float(x['close']) < x['ema_C'] and x['Minor1'] <= -2:
 
                 if (('buy-rsi' not in bst) and  x['RSI[-3]'] - x['RSI[-4]'] < 1.5 and 
-                    x['RSI[-3]'] < 30 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 30) or 
+                    x['RSI[-3]'] < 40 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 40) or 
                     x['RSI'] - x['RSI[-2]'] > 5)): 
                     bst.add('buy-rsi')
                     return None
@@ -430,7 +434,7 @@ def Profit(x):
             if float(x['close']) < x['ema_C'] and x['Minor1'] <= -2:
 
                 if (('buy-rsi' not in bst) and  x['RSI[-3]'] - x['RSI[-4]'] < 1.5 and 
-                    x['RSI[-3]'] < 30 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 30) or 
+                    x['RSI[-3]'] < 40 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 40) or 
                     x['RSI'] - x['RSI[-2]'] > 5)): 
                     bst.add('buy-rsi')
                     return None
@@ -445,7 +449,10 @@ def Profit(x):
     elif p1 == 1:
         
         bst = set()
-        if -1.5 < x['Major'] < 1.5: pass
+        if -1.5 < x['Major'] < 1.5: 
+
+            if bi1 == 'Buy-RSI' and x['ema_R[-2]'] - x['ema_R[-3]'] > 0 and x['ema_R[-2]'] > 30: 
+               sst.add('sell-rsi')
 
         elif x['Major'] <= -1.5:
 
@@ -836,7 +843,7 @@ bars = get_bars()
 print(bars)
 print(f"done bars. wait for excel. Profit gained: {bars['Profit'].sum()}")
 
-bars.to_excel(r'C:\Users\Personal Computer\Desktop\backtest7.2.8.xlsx')
+bars.to_excel(r'C:\Users\Personal Computer\Desktop\backtest8.0.3.xlsx')
 print("done excel")
 print(f"Profit gained: {bars['Profit'].sum()}")
 

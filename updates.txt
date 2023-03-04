@@ -1,23 +1,46 @@
 === FUTURE PLANS/CHANGES FOR MM_BOT ===
 
-- Change Buy Signal #2
 - simplify the functions and codes.
 - Add new Sell signal which is exclusive only for Buy2? Fix SellB2
 - connect mmbot to live futures data instead of testnet data ??
-- Revamp Buy-1B to reduce number of trades or commissions
-- change buy value of Buy2 to open? remove for loop?
-- Move/Add Buy1Aii to Minor1 < -2
-- Remove BuyRSI signal ?
-- #temporarily added Sell1Aii
-- #temporarily added SellB2
-- #temporarily added Buy1Aii2
-- #temporarily added Sell3B
 - add buystatus and sellstatus to mongodb
 - find a way to make Buy-RSI signal work even if RSI > 30
-- Remove/disable profitless signals
+- add tempvalue in mongodb
+- repurpose get_openvalue() in mongodb
+- find a way to make buy-rsi detect valid buy points in sideways phase using ema_A/B Crossover, Highest price, etc.
+- find/create buy signal that buys when price spikes up during sideways phase (cant be detected by Buy-RSI)
+- revise Sell-RSI and make it smarter, Sell high and dont wait to get lower
 
 
 === UPDATES IN MM_BOT ===
+
+Summary of Changes in March 6 - March 10, 2023:
+
+-
+-
+-
+-
+-
+-
+-
+
+
+Summary of Changes in February 27 - March 3, 2023:
+
+- added Buy-RSI to Major > 1.5
+- added sellstatus: 'sell-rsi' in (-1.5 < x['Major'] < 1.5)
+- added a 'for loop' for 'buystatus.discard('buy-rsi')' code in the buy condition of Buy-RSI to prevent false signal.
+- made adjustments on buystatus: 'dontbuy'
+- adjusted > 1 in Buy-RSI to 0.25 
+- removed - 0.75 in Sell-RSI
+- added dontbuy when -4 < Minor1[-3] < 4
+- added 'else: break' in every 'for loop' codes to save time
+- made Buy-RSI available to all values of Major
+- Made significant changes in mmbot by removing profitless buy and sell signals, simplifying the codes, and 
+  making adjustments on the remaining signals. As a result, the number of profits in Paper Trading increases but 
+  losses still occur. More adjustments and additions will made based on the results within the next days to improve 
+  the signals of mmbot.
+
 
 Summary of Changes in February 20 - February 24, 2023:
 

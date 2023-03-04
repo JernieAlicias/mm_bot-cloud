@@ -1,10 +1,7 @@
-import datetime, talib, pandas, math
+import datetime, talib, pandas, math, config
 from binance.client import Client
 
-liveapi_key    = "XKsaY99DDM52Iu7jh4KOg2hpzhjpZe8Ot4zRQn123H8FpPKG3HdpduhBcAun41Ku"
-liveapi_secret = "XzCTtkAg4OOAGrveJ8ZuE54le10B3Dcr8lAsV3EkWyynaySfD5EqVPxM4IDjAbc8"
-
-client = Client(liveapi_key, liveapi_secret, testnet=False)
+client = Client(config.api_key, config.api_secret, testnet=True)
 print("\nSuccessfully logged in", end="\n\n")
 
 SYMBOL    = 'ETHUSDT'
@@ -44,7 +41,8 @@ def BuySellLogic(x):
                     x['RSI[-3]'] < 40 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 40) or 
                     x['RSI'] - x['RSI[-2]'] > 5)): 
                     bstatus.add('buy-rsi')
-                    return str(bstatus) + ' 1'
+                    
+                    return None
 
                 if (('buy-1b' not in bstatus) and x['Minor1'] - x['Minor1[-2]'] >= 
                     math.log(-x['Minor1'],2)): bstatus.add('buy-1b')
@@ -74,7 +72,7 @@ def BuySellLogic(x):
                     x['RSI[-3]'] < 40 and ((x['RSI'] - x['RSI[-2]'] > 0.75 and x['RSI[-2]'] < 40) or 
                     x['RSI'] - x['RSI[-2]'] > 5)): 
                     bstatus.add('buy-rsi')
-                    return str(bstatus) + ' 2'
+                    return None
 
             if ('buy-rsi' in bstatus) or ('buy-1b' in bstatus) or ('buy1ai' in bstatus):
 
@@ -98,7 +96,7 @@ def BuySellLogic(x):
 
     if position == 0:
 
-        if ('dontbuy' in bstatus): return str(bstatus) + ' 3'
+        if ('dontbuy' in bstatus): return None
 
         elif -1.5 < x['Major'] < 1.5:
 
@@ -126,7 +124,7 @@ def BuySellLogic(x):
                           buyid = 'Buy1Aii'
                           return 'Buy1Aii'
 
-                    else: return str(bstatus) + ' 4'
+                    else: return None
 
                 elif x['Minor1'] <= -3:
 
@@ -145,9 +143,9 @@ def BuySellLogic(x):
 #                          buyid = 'Buy1Aii2'
 #                          return 'Buy1Aii2'  
 
-                    else: return str(bstatus) + ' 5'
+                    else: return None
 
-                else: return str(bstatus) + ' 6'
+                else: return None
 
             elif float(x['close']) < x['ema_C']:
 
@@ -162,9 +160,9 @@ def BuySellLogic(x):
                         #Then sleep for 2 mins
                         return 'Buy1Bi'
 
-                    else: return str(bstatus) + ' 7'
+                    else: return None
 
-                else: return str(bstatus) + ' 8'
+                else: return None
 
             elif x['Minor1[-2]'] - x['Minor1[-5]'] >= 3:
 
@@ -176,7 +174,7 @@ def BuySellLogic(x):
                     buyid = 'Buy2'
                     return 'Buy2'
 
-                else: return str(bstatus) + ' 9'
+                else: return None
 
             elif (('buy1ai' in bstatus) and 
                   float(x['close[-2]']) < float(x['open[-2]']) and float(x['close']) > float(x['open'])):
@@ -186,7 +184,7 @@ def BuySellLogic(x):
                     buyid = 'Buy1Ai'
                     return 'Buy1Ai'
             
-            else: return str(bstatus) + ' a'
+            else: return None
 
         elif x['Major'] <= -1.5 or x['Major[-2]'] <= -1.5:
 
@@ -206,7 +204,7 @@ def BuySellLogic(x):
                 buyid = 'Buy-1B'
                 return 'Buy-1B'
 
-            else: return str(bstatus) + ' b'
+            else: return None
 
         elif 1.5 <= x['Major']:
 
@@ -219,21 +217,21 @@ def BuySellLogic(x):
                     buyid = 'Buy+2'
                     return 'Buy+2'
 
-                else: return str(bstatus) + ' c'
+                else: return None
 
-            else: return str(bstatus) + ' d'
+            else: return None
 
-        else: return str(bstatus) + ' e'
+        else: return None
 
     else: # if position == 1:
 
         if  buyid == 'Buy-1B': 
             buyid = 'go to Buy-1Bi'
-            return str(bstatus) + ' f'
+            return None
 
         elif buyid == 'Buy1Bi':
              buyid = 'go to Buy1Bi'
-             return str(bstatus) + ' g'
+             return None
 
         elif -1.5 < x['Major']  <  1.5:
 
@@ -292,7 +290,7 @@ def BuySellLogic(x):
                         buyid = ''
                         return 'Sell1A'
 
-                    else: return str(bstatus) + ' h'
+                    else: return None
 
                 elif 2 <= x['Minor1']:
 
@@ -301,9 +299,9 @@ def BuySellLogic(x):
                         buyid = ''
                         return 'Sell1B'
 
-                    else: return str(bstatus) + ' i'
+                    else: return None
 
-                else: return str(bstatus) + ' j'
+                else: return None
 
             elif x['ema_C'] >= float(x['close']) > x['ema_D']:
 
@@ -313,7 +311,7 @@ def BuySellLogic(x):
                     buyid = ''
                     return 'Sell2A'
 
-                else: return str(bstatus) + ' k'
+                else: return None
 
             elif x['ema_D'] > float(x['close']) > x['ema_C'] or float(x['close']) > x['ema_D'] > x['ema_C']:
 
@@ -332,9 +330,9 @@ def BuySellLogic(x):
 
                     else: return 
                     
-                else: return str(bstatus) + ' m' 
+                else: return None 
 
-            else: return str(bstatus) + ' n'
+            else: return None
 
         elif x['Major'] <= -1.5:
 
@@ -354,7 +352,7 @@ def BuySellLogic(x):
                     sstatus = set()
                     return 'Sell-RSI'
 
-                else: return str(bstatus) + ' o'
+                else: return None
 
             elif buyid == 'go to Buy-1Bi': #from Buy-1B
 
@@ -368,9 +366,9 @@ def BuySellLogic(x):
                     buyid = ''
                     return 'Sell-1B'
 
-                else: return str(bstatus) + ' p'
+                else: return None
 
-            else: return str(bstatus) + ' q'
+            else: return None
 
         elif 1.5 < x['Major']:
 
@@ -381,9 +379,9 @@ def BuySellLogic(x):
                         buyid = ''
                         return 'Sell+1A'
 
-                    else: return str(bstatus) + ' r'
+                    else: return None
 
-                else: return str(bstatus) + ' s'
+                else: return None
 
 #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -792,8 +790,9 @@ def Profit(x):
 
 
 def get_bars():
+    datestart = datetime.datetime.now() - datetime.timedelta(days=7) # Used to indicate the date start of the bars
     bars = client.futures_historical_klines(SYMBOL, interval=TIMEFRAME, 
-    start_str="1667260800000.00", end_str="1674118800000.00")
+    start_str=datestart.strftime("%Y-%m-%d %H:%M:%S"))
     bars = pandas.DataFrame(bars, columns=['time','open','high',
     'low','close','vol','closetime','qav','trades','tbb','tbq','Nan'])
     bars["close[-2]"]   = bars.close.shift()
@@ -822,6 +821,9 @@ def get_bars():
     bars["Major"]       = talib.LINEARREG_ANGLE(bars.SMA,   4)
     bars["Major[-2]"]   = bars.Major.shift()
     bars["Major[-3]"]   = bars.Major.shift(2)
+    bars["Minor0"]      = talib.LINEARREG_ANGLE(bars.ema_B, 4)
+    bars["Minor0[-2]"]  = bars.Minor0.shift()
+    bars["Minor0[-3]"]  = bars.Minor0.shift(2)
     bars["Minor1"]      = talib.LINEARREG_ANGLE(bars.ema_C, 4)
     bars["Minor1[-2]"]  = bars.Minor1.shift()
     bars["Minor1[-3]"]  = bars.Minor1.shift(2)
@@ -834,15 +836,13 @@ def get_bars():
     bars["Minor2[-2]"]  = bars.Minor2.shift()
     bars["Minor2[-3]"]  = bars.Minor2.shift(2)
     bars["D&Time"]      = bars.apply(lambda x: datetime.datetime.fromtimestamp((x['time'])/1000), axis=1) 
-    bars['BuySell']     = bars.apply(BuySellLogic, axis=1)    
-    bars['Profit']      = bars.apply(Profit, axis=1)    
     return bars 
 
 bars = get_bars()
 print(bars)
-print(f"done bars. wait for excel. Profit gained: {bars['Profit'].sum()}")
 
-bars.to_excel(r'C:\Users\Personal Computer\Desktop\backtest8.0.3i.xlsx')
+
+bars.to_excel(r'C:\Users\Personal Computer\Desktop\backtest8.0.test.xlsx')
 print("done excel")
-print(f"Profit gained: {bars['Profit'].sum()}")
+
 
