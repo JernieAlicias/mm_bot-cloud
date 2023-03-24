@@ -1,29 +1,33 @@
-=== FUTURE PLANS/CHANGES FOR MM_BOT ===
-
-- simplify the functions and codes.
-- Add new Sell signal which is exclusive only for Buy2? Fix SellB2
-- connect mmbot to live futures data instead of testnet data ??
-- add buystatus and sellstatus to mongodb
-- find a way to make Buy-RSI signal work even if RSI > 30
-- add tempvalue in mongodb
-- repurpose get_openvalue() in mongodb
-- find a way to make buy-rsi detect valid buy points in sideways phase using ema_A/B Crossover, Highest price, etc.
-- find/create buy signal that buys when price spikes up during sideways phase (cant be detected by Buy-RSI)
-- revise Sell-RSI and make it smarter, Sell high and dont wait to get lower
-
-
 === UPDATES IN MM_BOT ===
+
+Summary of Changes in March 20 - March 24, 2023:
+
+- removed the get_mark_price function as it is no longer needed
+- made new code that remembers the lowest recent minor0 value for mmbot to "remember"
+- removed the [--] dontbuy code
+
+
+Summary of Changes in March 13 - March 17, 2023:
+
+- added new functions in mongodb.py to print the profits and buy values history to excel for analyzation purposes.
+- added new datas to be recorded in mongodb database for analyzation purposes.
+- changed the formulas of reqval(x) and reqminorval(x) in mmbot to make its results more accurate
+- removed the condition: (float(bars.close.iloc[-2]) < float(bars.open.iloc[-3]) + reqval(1.6)) when adding buystatus: buy-rsi
+- added new condition: (float(bars.Minor0.iloc[-3]) < minor0_val or float(bars.Minor0.iloc[-4]) < minor0_val or float(bars.Minor0.iloc[-5]) < minor0_val)
+  when adding buystatus: buy-rsi
+- Made some adjustments on the conditions of the buy signals of mmbot to make it more "strict" to reduce the number of
+  profitless trades. As a result, it now rarely makes a trade in a day but once the candles meet the specific 
+  conditions, then mmbot should be able to make a trade that is expected to yield a profit (but not 100% guaranteed). 
+  Additional adjustments will be made based on the results and mmbot's performance in the next few days.
 
 Summary of Changes in March 6 - March 10, 2023:
 
--
--
--
--
--
--
--
-
+- added new codes that disables mmbot if the prices in Binance Paper Trading are acting weirdly or bugged
+- removed the code 'if buyid == 'Buy-RSI':' in Selling Phase
+- added a new function in mmbot that analyzes the highest close value in the last 15 prices and the lowest value
+  in the last 4 prices and uses these to return a constant value which will be the basis if mmbot will buy or not.
+- Since ETHUSDT prices in Paper Trading are currently bugged, we have temporarily switched to LTCUSDT to 
+  continue our test with mmbot.
 
 Summary of Changes in February 27 - March 3, 2023:
 
@@ -41,7 +45,6 @@ Summary of Changes in February 27 - March 3, 2023:
   losses still occur. More adjustments and additions will made based on the results within the next days to improve 
   the signals of mmbot.
 
-
 Summary of Changes in February 20 - February 24, 2023:
 
 - revamped Buy-RSI
@@ -55,7 +58,6 @@ Summary of Changes in February 20 - February 24, 2023:
 - added Buy-RSI in -1.5 < x['Major'] < 1.5. As a result, the total profit gained by mmbot in backtesting has
   increased. For the next few days, we will continue the tests and experiments on Buy-RSI signal 
   to further increase the net profit gained by mmbot.
-
 
 Summary of Changes in February 13 - February 17, 2023:
 
