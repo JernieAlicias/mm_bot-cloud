@@ -6,7 +6,7 @@ store_datab_walletbal, get_datab_walletbal)
 client = Client(config.api_key, config.api_secret, testnet=True)
 print("\nSuccessfully logged in", end="\n\n")
 
-SYMBOL     = 'ETHUSDT'
+SYMBOL     = 'LTCUSDT'
 ASSET      = 'USDT'
 TIMEFRAME  = '1m'
 QTY_TRADE  =  1
@@ -119,78 +119,93 @@ def buy_sell_logic(place):
     global tempvalue, Minor1_4, Minor1_5, buyid, buystatus, Minor0, m0stat, sell1stat
 
     if position == 0:
+
+        if ((float(bars.high.iloc[-2]) == float(bars.high.iloc[-3]) and float(bars.low.iloc[-2]) == float(bars.low.iloc[-3])) or 
+            (float(bars.high.iloc[-2]) == float(bars.high.iloc[-4]) and float(bars.low.iloc[-2]) == float(bars.low.iloc[-4])) or
+            (float(bars.high.iloc[-3]) == float(bars.high.iloc[-4]) and float(bars.low.iloc[-3]) == float(bars.low.iloc[-4]))):
+
+             buyid =  'sleep mmbot'
+             buystatus.add('dontbuy')
+             print("You're in Buying phase, waiting to buy [--] / ", end="") 
+ 
+        elif buyid == 'sleep mmbot':
+             buyid =  ''
+             print("Sleeping for 1 minute ", end="") 
+             time.sleep(60)
+
+        else:
             
-        if (('dontbuy' not in buystatus) and ((float(bars.Minor1.iloc[-2]) < -reqminorval(40) and 
-            float(bars.Minor1.iloc[-1]) < -reqminorval(40)) or float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-3]) < -reqminorval(4) or
-            float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) < -reqminorval(3))): 
-            buystatus.add('dontbuy')
+            if (('dontbuy' not in buystatus) and ((float(bars.Minor1.iloc[-2]) < -reqminorval(40) and 
+                float(bars.Minor1.iloc[-1]) < -reqminorval(40)) or float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-3]) < -reqminorval(4) or
+                float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) < -reqminorval(3))): 
+                buystatus.add('dontbuy')
 
-        if (('dontbuy' in buystatus) and (float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) > -reqminorval(1.5) or
-            (float(bars.close.iloc[-1]) > float(bars.open.iloc[-1]) and float(bars.close.iloc[-2]) > float(bars.open.iloc[-2])) or
-                float(bars.close.iloc[-1]) > min(float(bars.open.iloc[-1]), float(bars.close.iloc[-2])) + reqval(1.2))): 
-            buystatus.discard('dontbuy')
-
-
-        if ('buy-rsi' not in buystatus):
-        
-            if float(bars.close.iloc[-1]) <= float(bars.ema_C.iloc[-1]):  
-                Minor1_4   =  -float(bars.Minor1.iloc[-4])
-                Minor1_5   =  -float(bars.Minor1.iloc[-5])
-
-            elif float(bars.close.iloc[-1]) > float(bars.ema_C.iloc[-1]): 
-                Minor1_4   =   float(bars.Minor1.iloc[-4])
-                Minor1_5   =   float(bars.Minor1.iloc[-5])
+            if (('dontbuy' in buystatus) and (float(bars.Minor1.iloc[-1]) - float(bars.Minor1.iloc[-2]) > -reqminorval(1.5) or
+                (float(bars.close.iloc[-1]) > float(bars.open.iloc[-1]) and float(bars.close.iloc[-2]) > float(bars.open.iloc[-2])) or
+                 float(bars.close.iloc[-1]) > min(float(bars.open.iloc[-1]), float(bars.close.iloc[-2])) + reqval(1.2))): 
+                buystatus.discard('dontbuy')
 
 
-            if  m0stat == False: Minor0 = float(bars.Minor0.iloc[-2])
+            if ('buy-rsi' not in buystatus):
+            
+                if float(bars.close.iloc[-1]) <= float(bars.ema_C.iloc[-1]):  
+                    Minor1_4   =  -float(bars.Minor1.iloc[-4])
+                    Minor1_5   =  -float(bars.Minor1.iloc[-5])
 
-            if  float(bars.Minor0.iloc[-2]) <= -reqminorval(30): 
-                Minor0 =  float(bars.Minor0.iloc[-2])
-                m0stat =  True
+                elif float(bars.close.iloc[-1]) > float(bars.ema_C.iloc[-1]): 
+                    Minor1_4   =   float(bars.Minor1.iloc[-4])
+                    Minor1_5   =   float(bars.Minor1.iloc[-5])
 
-            if  m0stat == True and float(bars.Minor0.iloc[-2]) > reqminorval(30): 
-                Minor0 =  float(bars.Minor0.iloc[-2])
-                m0stat =  False
+
+                if  m0stat == False: Minor0 = float(bars.Minor0.iloc[-2])
+
+                if  float(bars.Minor0.iloc[-2]) <= -reqminorval(30): 
+                    Minor0 =  float(bars.Minor0.iloc[-2])
+                    m0stat =  True
+
+                if  m0stat == True and float(bars.Minor0.iloc[-2]) > reqminorval(30): 
+                    Minor0 =  float(bars.Minor0.iloc[-2])
+                    m0stat =  False
+                    
+
+                if (('dontbuy' not in buystatus) and (Minor0 < -reqminorval(30) or float(bars.RSI.iloc[-2]) < 30) and 
+                    Minor1_4 >= reqminorval(5) and float(bars.RSI.iloc[-2]) < 45 and float(bars.Minor1.iloc[-1]) > -reqminorval(20) and
+                    float(bars.close.iloc[-1]) > min(float(bars.open.iloc[-1]), float(bars.close.iloc[-2])) + reqval(1.2) and
+                    float(bars.close.iloc[-1]) > float(bars.open.iloc[-1])):
+
+                    n, m = 0, 0
+                    minval = min(float(bars.open.iloc[-1]), float(bars.close.iloc[-2]))
+                    for _ in  range(30): #adjusted 03/03 10:21, 03/06 7:13, 03/14 9:30 (20 to 30)
+                        if  float(bars.close.iloc[-1]) > minval + reqval(1.6): m += 10
+                        if (float(bars.close.iloc[-1]) > minval + reqval(1.2) and 
+                            float(bars.close.iloc[-1]) > float(bars.open.iloc[-1])): n += 1
+                        else: break
+                        if  m == 30: break
+                        time.sleep(1)                      
+                    if  n == 30 or m == 30: 
+                        buyid = 'Buy-RSI'
+                        order_buy('Buy-RSI [0a]')
+                        buystatus = set()
+                        tempvalue = 0
+                        print("Order Buy id:Buy-RSI [0a]") 
+                        time.sleep(30)  
+
+                    else: print("You're in Buying phase, waiting to buy [0a] / ", end="")    
                 
+                elif (float(bars.RSI.iloc[-3]) < 30 or (float(bars.RSI.iloc[-3]) - float(bars.RSI.iloc[-4]) < 1.5 and Minor1_5 >= reqminorval(5) and
+                      float(bars.RSI.iloc[-3]) < 45 and float(bars.RSI.iloc[-2]) - float(bars.RSI.iloc[-3]) > 0.5 and Minor0 < -reqminorval(30))):
+                        buystatus.add('buy-rsi')
+                        tempvalue = float(bars.close.iloc[-2])
+                        print("buystatus: 'buy-rsi' added [0]")
+                        time.sleep(15) 
 
-            if (('dontbuy' not in buystatus) and (Minor0 < -reqminorval(30) or float(bars.RSI.iloc[-2]) < 30) and 
-                Minor1_4 >= reqminorval(5) and float(bars.RSI.iloc[-2]) < 45 and float(bars.Minor1.iloc[-1]) > -reqminorval(20) and
-                float(bars.close.iloc[-1]) > min(float(bars.open.iloc[-1]), float(bars.close.iloc[-2])) + reqval(1.2) and
-                float(bars.close.iloc[-1]) > float(bars.open.iloc[-1])):
+            if ('buy-rsi' in buystatus):    
 
-                n, m = 0, 0
-                minval = min(float(bars.open.iloc[-1]), float(bars.close.iloc[-2]))
-                for _ in  range(30): #adjusted 03/03 10:21, 03/06 7:13, 03/14 9:30 (20 to 30)
-                    if  float(bars.close.iloc[-1]) > minval + reqval(1.6): m += 10
-                    if (float(bars.close.iloc[-1]) > minval + reqval(1.2) and 
-                        float(bars.close.iloc[-1]) > float(bars.open.iloc[-1])): n += 1
-                    else: break
-                    if  m == 30: break
-                    time.sleep(1)                      
-                if  n == 30 or m == 30: 
-                    buyid = 'Buy-RSI'
-                    order_buy('Buy-RSI [0a]')
-                    buystatus = set()
+                if (float(bars.ema_A.iloc[-3]) > float(bars.ema_B.iloc[-3]) and 
+                    float(bars.ema_A.iloc[-2]) < float(bars.ema_B.iloc[-2])):
+                    buystatus.discard('buy-rsi')   
                     tempvalue = 0
-                    print("Order Buy id:Buy-RSI [0a]") 
-                    time.sleep(30)  
-
-                else: print("You're in Buying phase, waiting to buy [0a] / ", end="")    
-            
-            elif (float(bars.RSI.iloc[-3]) < 30 or (float(bars.RSI.iloc[-3]) - float(bars.RSI.iloc[-4]) < 1.5 and Minor1_5 >= reqminorval(5) and
-                    float(bars.RSI.iloc[-3]) < 45 and float(bars.RSI.iloc[-2]) - float(bars.RSI.iloc[-3]) > 0.5 and Minor0 < -reqminorval(30))):
-                    buystatus.add('buy-rsi')
-                    tempvalue = float(bars.close.iloc[-2])
-                    print("buystatus: 'buy-rsi' added [0]")
-                    time.sleep(15) 
-
-        if ('buy-rsi' in buystatus):    
-
-            if (float(bars.ema_A.iloc[-3]) > float(bars.ema_B.iloc[-3]) and 
-                float(bars.ema_A.iloc[-2]) < float(bars.ema_B.iloc[-2])):
-                buystatus.discard('buy-rsi')   
-                tempvalue = 0
-                print("buystatus: 'buy-rsi' removed [0]")             
+                    print("buystatus: 'buy-rsi' removed [0]")             
 
     elif position == 1: buystatus = set()
 

@@ -1,10 +1,25 @@
+=== FUTURE PLANS/CHANGES FOR MM_BOT ===
+
+- simplify the functions and codes.
+- Add new Sell signal which is exclusive only for Buy2? Fix SellB2
+- connect mmbot to live futures data instead of testnet data ??
+- add buystatus and sellstatus to mongodb
+- find a way to make Buy-RSI signal work even if RSI > 30
+- add tempvalue in mongodb
+- repurpose get_openvalue() in mongodb
+- find a way to make buy-rsi detect valid buy points in sideways phase using ema_A/B Crossover, Highest price, etc.
+- find/create buy signal that buys when price spikes up during sideways phase (cant be detected by Buy-RSI)
+- revise Sell-RSI and make it smarter, Sell high and dont wait to get lower
+
+
 === UPDATES IN MM_BOT ===
 
-Summary of Changes in March 20 - March 24, 2023:
+Summary of Changes in March 20 - March 23, 2023:
 
 - removed the get_mark_price function as it is no longer needed
-- made new code that remembers the lowest recent minor0 value for mmbot to "remember"
-- removed the [--] dontbuy code
+- todo: make new code that remembers the lowest recent minor0 value for mmbot to "remember"
+- todo: remove the [--] dontbuy code
+
 
 
 Summary of Changes in March 13 - March 17, 2023:
